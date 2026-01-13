@@ -85,7 +85,7 @@ export default function LoginPage() {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
-          className="text-6xl md:text-7xl lg:text-8xl font-semibold tracking-tight mb-4"
+          className="text-6xl md:text-7xl lg:text-8xl font-black tracking-tight mb-4"
         >
           MEREO
         </motion.h1>
@@ -107,7 +107,7 @@ export default function LoginPage() {
           transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
           className="mb-8"
         >
-          <span className="font-mono text-3xl md:text-4xl text-text-secondary">
+          <span className="font-mono font-light text-3xl md:text-4xl text-text-secondary">
             {format(currentTime, "h:mm:ss a")}
           </span>
         </motion.div>
@@ -247,7 +247,7 @@ function EndTimePickerModal({
       >
         <div className="w-full max-w-sm bg-surface border border-border-subtle rounded-2xl p-8 shadow-2xl pointer-events-auto">
           {/* Title */}
-          <h2 className="text-2xl font-semibold text-center mb-2">
+          <h2 className="text-2xl font-black text-center mb-2">
             When does your day end?
           </h2>
           <p className="text-text-secondary text-center text-sm mb-8">

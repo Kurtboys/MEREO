@@ -129,7 +129,7 @@ export default function SchedulerPage() {
       {/* Left Panel */}
       <div className="w-[320px] border-r border-border-subtle p-6 flex flex-col bg-surface">
         {/* Header */}
-        <h2 className="text-xl font-bold mb-6">Scheduler</h2>
+        <h2 className="text-xl font-black mb-6">Scheduler</h2>
 
         {/* Mini Calendar */}
         <MiniCalendar
@@ -290,7 +290,7 @@ export default function SchedulerPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-2xl font-bold mb-1">
+            <h1 className="text-2xl font-black mb-1">
               {format(selectedDate, "EEEE, MMMM d, yyyy")}
             </h1>
             <p className="text-text-secondary">

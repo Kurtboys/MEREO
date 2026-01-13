@@ -1,3 +1,30 @@
+/* ============================================
+   MEREO Custom Fonts
+   ============================================ */
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/Satoshi-Black.woff2') format('woff2');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/Satoshi-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/fonts/JetBrainsMono-Light.woff2') format('woff2');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
 @import "tailwindcss";
 
 /* ============================================
@@ -74,8 +101,8 @@
   --color-edge-complete: var(--edge-complete);
 
   /* Fonts */
-  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
-  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+  --font-sans: "Satoshi", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
 }
 
 /* Global Reset & Base Styles */
@@ -98,6 +125,7 @@ body {
   background-color: var(--bg-void);
   color: var(--text-primary);
   font-family: var(--font-sans);
+  font-weight: 500; /* Satoshi Medium as default */
   font-size: 16px;
   line-height: 1.5;
   min-height: 100vh;
@@ -107,7 +135,7 @@ body {
 
 /* Typography Defaults */
 h1, h2, h3, h4, h5, h6 {
-  font-weight: 600;
+  font-weight: 900; /* Satoshi Black for headers */
   line-height: 1.2;
 }
 
@@ -179,7 +207,7 @@ a {
 .timer-display {
   font-family: var(--font-mono);
   font-size: 3rem;
-  font-weight: 400;
+  font-weight: 300; /* JetBrains Mono Light */
   letter-spacing: 0.05em;
   font-variant-numeric: tabular-nums;
 }

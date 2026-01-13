@@ -302,7 +302,7 @@ export function CreateMissionModal({
               >
                 <Check className="w-10 h-10 text-status-success" />
               </motion.div>
-              <h2 className="text-2xl font-bold mb-2">Mission Created!</h2>
+              <h2 className="text-2xl font-black mb-2">Mission Created!</h2>
               <p className="text-text-secondary">{missionTitle}</p>
             </motion.div>
           ) : (
@@ -310,7 +310,7 @@ export function CreateMissionModal({
               {/* Header */}
               <div className="flex items-center justify-between p-6 border-b border-border-subtle">
                 <div>
-                  <h2 className="text-xl font-bold">Create Mission</h2>
+                  <h2 className="text-xl font-black">Create Mission</h2>
                   <p className="text-sm text-text-secondary">
                     Step {step} of 3
                   </p>

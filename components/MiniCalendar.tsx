@@ -71,7 +71,7 @@ export function MiniCalendar({
         >
           <ChevronLeft className="w-5 h-5 text-text-secondary" />
         </button>
-        <h3 className="text-base font-semibold text-text-primary">
+        <h3 className="text-base font-black text-text-primary">
           {format(currentMonth, "MMMM yyyy")}
         </h3>
         <button
