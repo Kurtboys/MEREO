@@ -1,0 +1,233 @@
+@import "tailwindcss";
+
+/* ============================================
+   MEREO Design System - Global Styles
+   ============================================ */
+
+/* CSS Custom Properties for MEREO Design Tokens */
+:root {
+  /* Backgrounds */
+  --bg-void: #0A0A0A;
+  --bg-surface: #141414;
+  --bg-surface-hover: #1A1A1A;
+
+  /* Borders */
+  --border-subtle: #2A2A2A;
+  --border-focus: #3B82F6;
+
+  /* Text */
+  --text-primary: #E5E5E5;
+  --text-secondary: #737373;
+  --text-disabled: #525252;
+
+  /* Accent */
+  --accent-primary: #3B82F6;
+  --accent-primary-hover: #2563EB;
+
+  /* Status */
+  --status-warning: #F59E0B;
+  --status-success: #10B981;
+  --status-bottleneck: #EF4444;
+
+  /* Sticky Note Colors (muted/dark versions) */
+  --sticky-yellow: #78716C;
+  --sticky-pink: #9D7A8C;
+  --sticky-blue: #64748B;
+  --sticky-green: #5F7A6A;
+  --sticky-purple: #7C6F93;
+
+  /* Edge/Arrow Colors */
+  --edge-default: #3A3A3A;
+  --edge-active: #3B82F6;
+  --edge-complete: #10B981;
+}
+
+/* Tailwind v4 Theme Configuration */
+@theme inline {
+  /* Colors */
+  --color-void: var(--bg-void);
+  --color-surface: var(--bg-surface);
+  --color-surface-hover: var(--bg-surface-hover);
+
+  --color-border-subtle: var(--border-subtle);
+  --color-border-focus: var(--border-focus);
+
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-disabled: var(--text-disabled);
+
+  --color-accent: var(--accent-primary);
+  --color-accent-hover: var(--accent-primary-hover);
+
+  --color-status-warning: var(--status-warning);
+  --color-status-success: var(--status-success);
+  --color-status-bottleneck: var(--status-bottleneck);
+
+  --color-sticky-yellow: var(--sticky-yellow);
+  --color-sticky-pink: var(--sticky-pink);
+  --color-sticky-blue: var(--sticky-blue);
+  --color-sticky-green: var(--sticky-green);
+  --color-sticky-purple: var(--sticky-purple);
+
+  --color-edge: var(--edge-default);
+  --color-edge-active: var(--edge-active);
+  --color-edge-complete: var(--edge-complete);
+
+  /* Fonts */
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+}
+
+/* Global Reset & Base Styles */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  /* Prevent font size inflation on mobile */
+  -moz-text-size-adjust: none;
+  -webkit-text-size-adjust: none;
+  text-size-adjust: none;
+}
+
+body {
+  background-color: var(--bg-void);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.5;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography Defaults */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+/* Focus States - Accessible but on-brand */
+:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+/* Remove default button styles */
+button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+/* Remove default link styles */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Scrollbar Styling (Webkit) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-void);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-subtle);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* Firefox Scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-subtle) var(--bg-void);
+}
+
+/* Selection Styling */
+::selection {
+  background-color: var(--accent-primary);
+  color: var(--bg-void);
+}
+
+/* Smooth Transitions by Default */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Utility Classes */
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+/* Timer Display Styles */
+.timer-display {
+  font-family: var(--font-mono);
+  font-size: 3rem;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (min-width: 768px) {
+  .timer-display {
+    font-size: 4rem;
+  }
+}
+
+/* Slow Pulse Animation for Active Timer */
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Glow Animation */
+@keyframes glow {
+  0% {
+    box-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
+  }
+  100% {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.8);
+  }
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite alternate;
+}
+
+/* Edge Completion Animation */
+@keyframes edge-travel {
+  0% {
+    stroke-dashoffset: 100%;
+  }
+  100% {
+    stroke-dashoffset: 0%;
+  }
+}
+
+.animate-edge-complete {
+  animation: edge-travel 800ms ease-out forwards;
+}
