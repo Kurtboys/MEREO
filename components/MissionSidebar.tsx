@@ -173,7 +173,7 @@ export function MissionSidebar() {
       <div className="p-4 border-t border-border-subtle">
         <button
           onClick={handleEndDay}
-          className="w-full px-4 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-hover rounded-lg transition-colors"
+          className="w-full px-4 py-2 text-sm text-text-secondary border border-border-subtle hover:text-text-primary hover:bg-surface-hover hover:border-text-disabled rounded-lg transition-all duration-200"
         >
           End Day
         </button>

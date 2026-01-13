@@ -37,7 +37,7 @@ export function AppNav() {
         {/* Logo */}
         <Link
           href={logoHref}
-          className="text-xl font-semibold tracking-tight hover:text-accent transition-colors"
+          className="text-xl font-semibold tracking-tight hover:text-accent transition-all duration-200"
         >
           MEREO
         </Link>
@@ -51,10 +51,10 @@ export function AppNav() {
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  "px-4 py-2 text-sm font-medium rounded-lg transition-colors relative",
+                  "px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 relative",
                   isActive
                     ? "text-accent"
-                    : "text-text-secondary hover:text-text-primary hover:bg-surface-hover"
+                    : "text-text-secondary hover:text-accent hover:bg-surface-hover"
                 )}
               >
                 {link.label}
@@ -77,7 +77,7 @@ export function AppNav() {
           ) : (
             <Link
               href="/"
-              className="text-xs text-text-secondary hover:text-text-primary transition-colors"
+              className="text-xs text-text-secondary hover:text-accent transition-all duration-200"
             >
               Login &rarr;
             </Link>
