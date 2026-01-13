@@ -1,32 +1,46 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
 import { Lock, ArrowRight } from "lucide-react";
-import { useMereoStore, useCurrentSession, useMissionsByDate, useTags } from "@/lib/store";
+import { useMereoStore } from "@/lib/store";
 import { getTodayDateString, formatTimeDisplay } from "@/lib/utils";
 import { DraggableMissionBlock } from "./MissionBlock";
 
 export function MissionSidebar() {
   const router = useRouter();
-  const today = getTodayDateString();
-  const currentSession = useCurrentSession();
-  const todayMissions = useMissionsByDate(today);
-  const tags = useTags();
-  const { endDaySession } = useMereoStore();
+  const [isClient, setIsClient] = useState(false);
+  const { currentSession, missions, tags, endDaySession } = useMereoStore();
 
-  // Memoize derived values to prevent infinite re-renders
-  const { hasStartedMission, regularMissions, bottleneckMissions } = useMemo(() => {
-    const hasStarted = todayMissions.some(
+  // Only render on client
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  const today = getTodayDateString();
+
+  // Memoize derived values to prevent re-render issues
+  const { todayMissions, hasStartedMission, regularMissions, bottleneckMissions } = useMemo(() => {
+    const todayM = missions
+      .filter((m) => m.scheduledDate === today)
+      .sort((a, b) => a.order - b.order);
+
+    const hasStarted = todayM.some(
       (m) => m.status === "active" || m.status === "completed" || m.status === "bottleneck"
     );
-    const regular = todayMissions.filter((m) => m.status !== "bottleneck");
-    const bottlenecks = todayMissions.filter((m) => m.status === "bottleneck");
-    return { hasStartedMission: hasStarted, regularMissions: regular, bottleneckMissions: bottlenecks };
-  }, [todayMissions]);
+    const regular = todayM.filter((m) => m.status !== "bottleneck");
+    const bottlenecks = todayM.filter((m) => m.status === "bottleneck");
+
+    return {
+      todayMissions: todayM,
+      hasStartedMission: hasStarted,
+      regularMissions: regular,
+      bottleneckMissions: bottlenecks
+    };
+  }, [missions, today]);
 
   // Handle end day
   const handleEndDay = () => {
@@ -35,11 +49,16 @@ export function MissionSidebar() {
     router.push("/");
   };
 
-  if (!currentSession) {
-    return null;
+  // Show nothing until client-side
+  if (!isClient || !currentSession) {
+    return (
+      <aside className="w-[280px] h-full bg-surface border-r border-border-subtle flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+      </aside>
+    );
   }
 
-  // Safely format dates - handle both Date objects and ISO strings
+  // Safely format dates
   const formatSessionTime = (time: Date | string | undefined): string => {
     if (!time) return "--:--";
     try {
@@ -84,7 +103,7 @@ export function MissionSidebar() {
         </div>
       )}
 
-      {/* Mission List - simplified without drag reorder for now */}
+      {/* Mission List */}
       <div className="flex-1 overflow-y-auto p-4">
         <div className="space-y-3">
           <AnimatePresence mode="popLayout">
@@ -98,6 +117,7 @@ export function MissionSidebar() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
+                  layout
                 >
                   <DraggableMissionBlock
                     mission={mission}
@@ -121,13 +141,18 @@ export function MissionSidebar() {
               {bottleneckMissions.map((mission) => {
                 const tag = tags.find((t) => t.id === mission.tagId);
                 return (
-                  <DraggableMissionBlock
+                  <motion.div
                     key={mission.id}
-                    mission={mission}
-                    tag={tag}
-                    isActive={false}
-                    isDraggable={false}
-                  />
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                  >
+                    <DraggableMissionBlock
+                      mission={mission}
+                      tag={tag}
+                      isActive={false}
+                      isDraggable={false}
+                    />
+                  </motion.div>
                 );
               })}
             </div>

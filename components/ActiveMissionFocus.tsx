@@ -1,24 +1,39 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, AlertTriangle, Play } from "lucide-react";
-import { useMereoStore, useActiveMission, useMissionsByDate, useTags } from "@/lib/store";
+import { useMereoStore } from "@/lib/store";
 import { getTodayDateString, formatTimer, formatOvertime, cn } from "@/lib/utils";
 import type { Checkpoint } from "@/lib/types";
 
 export function ActiveMissionFocus() {
+  const [isClient, setIsClient] = useState(false);
   const today = getTodayDateString();
-  const activeMission = useActiveMission();
-  const todayMissions = useMissionsByDate(today);
-  const tags = useTags();
+
   const {
+    missions,
+    tags,
     completeCheckpoint,
     uncompleteCheckpoint,
     completeMission,
     bottleneckMission,
     setMissionActive,
   } = useMereoStore();
+
+  // Only render on client
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Memoize derived values
+  const { activeMission, todayMissions } = useMemo(() => {
+    const todayM = missions
+      .filter((m) => m.scheduledDate === today)
+      .sort((a, b) => a.order - b.order);
+    const active = missions.find((m) => m.status === "active");
+    return { activeMission: active, todayMissions: todayM };
+  }, [missions, today]);
 
   // Timer state
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -105,6 +120,15 @@ export function ActiveMissionFocus() {
       setMissionActive(firstMission.id);
     }
   }, [todayMissions, setMissionActive]);
+
+  // Loading state
+  if (!isClient) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   // No active mission state
   if (!activeMission) {
