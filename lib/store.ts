@@ -917,7 +917,6 @@ export const useMereoStore = create<MereoStore>()(
         currentSession: state.currentSession,
         whiteboards: state.whiteboards,
       }),
-      skipHydration: true,
     }
   )
 );
@@ -930,17 +929,22 @@ export function useStoreHydration() {
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    // Manually trigger hydration on client
-    useMereoStore.persist.rehydrate();
+    // On client mount, check if already hydrated or wait for it
+    const checkHydration = () => {
+      if (useMereoStore.persist.hasHydrated()) {
+        setHydrated(true);
+        return true;
+      }
+      return false;
+    };
 
+    // Check immediately
+    if (checkHydration()) return;
+
+    // If not hydrated yet, subscribe to hydration complete
     const unsubFinishHydration = useMereoStore.persist.onFinishHydration(() => {
       setHydrated(true);
     });
-
-    // Check if already hydrated
-    if (useMereoStore.persist.hasHydrated()) {
-      setHydrated(true);
-    }
 
     return () => {
       unsubFinishHydration();

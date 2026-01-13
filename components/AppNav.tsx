@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useCurrentSession } from "@/lib/store";
+import { useCurrentSession, useStoreHydration } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 interface NavLink {
@@ -19,8 +19,9 @@ const navLinks: NavLink[] = [
 
 export function AppNav() {
   const pathname = usePathname();
+  const hydrated = useStoreHydration();
   const currentSession = useCurrentSession();
-  const hasActiveSession = currentSession?.isActive ?? false;
+  const hasActiveSession = hydrated && (currentSession?.isActive ?? false);
 
   // Filter links based on session state
   const visibleLinks = navLinks.filter(
