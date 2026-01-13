@@ -3,9 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMereoStore } from "@/lib/store";
-import { getTodayDateString } from "@/lib/utils";
 import { MissionSidebar } from "@/components/MissionSidebar";
-import { ActiveMissionFocus } from "@/components/ActiveMissionFocus";
+import { MissionFocus } from "@/components/MissionFocus";
 
 export default function TodayPage() {
   const router = useRouter();
@@ -49,7 +48,7 @@ export default function TodayPage() {
 
       {/* Main Focus Area - fills remaining space */}
       <main className="flex-1 bg-void overflow-hidden">
-        <ActiveMissionFocus />
+        <MissionFocus />
       </main>
     </div>
   );
