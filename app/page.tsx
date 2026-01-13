@@ -278,9 +278,17 @@ export default function DesignSystemTest() {
 
       {/* Footer */}
       <footer className="pt-8 border-t border-border-subtle">
-        <p className="text-text-secondary text-sm">
-          MEREO Design System v1.0 - Ready for Implementation
-        </p>
+        <div className="flex items-center justify-between">
+          <p className="text-text-secondary text-sm">
+            MEREO Design System v1.0 - Ready for Implementation
+          </p>
+          <a
+            href="/store-test"
+            className="px-4 py-2 bg-surface hover:bg-surface-hover border border-border-subtle text-text-primary rounded-lg transition-colors text-sm"
+          >
+            Test Store &rarr;
+          </a>
+        </div>
       </footer>
     </div>
   );
