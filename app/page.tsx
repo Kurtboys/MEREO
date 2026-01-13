@@ -1,324 +1,319 @@
-export default function DesignSystemTest() {
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import { format, addHours, setHours, setMinutes } from "date-fns";
+import { useMereoStore } from "@/lib/store";
+import { getTodayDateString } from "@/lib/utils";
+
+export default function LoginPage() {
+  const router = useRouter();
+  const [currentTime, setCurrentTime] = useState<Date | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { missions, currentSession, startDaySession, loadSeedData } = useMereoStore();
+
+  // Get yesterday's incomplete/bottleneck missions
+  const carryoverMissions = missions.filter(
+    (m) =>
+      m.scheduledDate !== getTodayDateString() &&
+      (m.status === "incomplete" || m.status === "bottleneck")
+  );
+
+  // Also count today's missions that are incomplete/bottleneck (from previous sessions)
+  const todayPendingMissions = missions.filter(
+    (m) =>
+      m.scheduledDate === getTodayDateString() &&
+      (m.status === "incomplete" || m.status === "bottleneck")
+  );
+
+  const waitingMissions = carryoverMissions.length + todayPendingMissions.length;
+
+  // Update current time every second
+  useEffect(() => {
+    setCurrentTime(new Date());
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // If already logged in for today, redirect to /today
+  useEffect(() => {
+    if (currentSession?.isActive && currentSession.date === getTodayDateString()) {
+      router.push("/today");
+    }
+  }, [currentSession, router]);
+
+  const handleLoginClick = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleStartDay = useCallback(
+    (endTime: Date) => {
+      startDaySession(endTime);
+      setIsModalOpen(false);
+      router.push("/today");
+    },
+    [startDaySession, router]
+  );
+
+  // Show loading state until client hydrates
+  if (!currentTime) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen p-8 md:p-12 lg:p-16">
-      {/* Header */}
-      <header className="mb-16">
-        <h1 className="text-4xl md:text-5xl lg:text-6xl font-semibold tracking-tight mb-4">
+    <>
+      <div className="min-h-screen flex flex-col items-center justify-center px-6">
+        {/* Wordmark */}
+        <motion.h1
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="text-6xl md:text-7xl lg:text-8xl font-semibold tracking-tight mb-4"
+        >
           MEREO
-        </h1>
-        <p className="text-text-secondary text-lg">
-          Brutalist Void Calendar - Design System Test
-        </p>
-      </header>
+        </motion.h1>
 
-      {/* Timer Sample */}
-      <section className="mb-16">
-        <h2 className="text-xl font-semibold mb-6 text-text-secondary">
-          Timer Display (JetBrains Mono)
-        </h2>
-        <div className="bg-surface rounded-lg p-8 inline-block">
-          <span className="timer-display text-text-primary">47:23</span>
-        </div>
-        <div className="mt-4 bg-surface rounded-lg p-8 inline-block ml-4">
-          <span className="timer-display text-status-warning animate-pulse-slow">
-            +03:45
+        {/* Tagline */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+          className="text-text-secondary text-lg md:text-xl mb-16"
+        >
+          Missions. Not tasks.
+        </motion.p>
+
+        {/* Current Time */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
+          className="mb-8"
+        >
+          <span className="font-mono text-3xl md:text-4xl text-text-secondary">
+            {format(currentTime, "h:mm:ss a")}
           </span>
-        </div>
-      </section>
+        </motion.div>
 
-      {/* Typography */}
-      <section className="mb-16">
-        <h2 className="text-xl font-semibold mb-6 text-text-secondary">
-          Typography
-        </h2>
-        <div className="space-y-4 bg-surface rounded-lg p-8">
-          <p className="text-3xl font-semibold">
-            Mission Title (24-32px, Semibold)
-          </p>
-          <p className="text-lg text-text-primary">
-            Body text in Inter - Primary color (#E5E5E5)
-          </p>
-          <p className="text-lg text-text-secondary">
-            Secondary text for less important info (#737373)
-          </p>
-          <p className="text-lg text-text-disabled">
-            Disabled text state (#525252)
-          </p>
-          <p className="font-mono text-lg">
-            Monospace text in JetBrains Mono for code and timers
-          </p>
-        </div>
-      </section>
+        {/* Login Button */}
+        <motion.button
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
+          whileHover={{ y: -2, scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={handleLoginClick}
+          className="w-full max-w-xs px-8 py-4 bg-accent hover:bg-accent-hover text-void font-semibold text-lg rounded-lg transition-colors duration-200 shadow-lg shadow-accent/20"
+        >
+          Login for the Day
+        </motion.button>
 
-      {/* Background Colors */}
-      <section className="mb-16">
-        <h2 className="text-xl font-semibold mb-6 text-text-secondary">
-          Background Colors
-        </h2>
-        <div className="flex flex-wrap gap-4">
-          <ColorSwatch
-            name="Void"
-            color="bg-void"
-            hex="#0A0A0A"
-            textLight
-          />
-          <ColorSwatch
-            name="Surface"
-            color="bg-surface"
-            hex="#141414"
-            textLight
-          />
-          <ColorSwatch
-            name="Surface Hover"
-            color="bg-surface-hover"
-            hex="#1A1A1A"
-            textLight
-          />
-        </div>
-      </section>
-
-      {/* Border Colors */}
-      <section className="mb-16">
-        <h2 className="text-xl font-semibold mb-6 text-text-secondary">
-          Border Colors
-        </h2>
-        <div className="flex flex-wrap gap-4">
-          <div className="w-32 h-32 bg-surface border-2 border-border-subtle rounded-lg flex flex-col items-center justify-center p-4">
-            <span className="text-sm text-text-secondary">Subtle</span>
-            <span className="text-xs text-text-disabled mt-1">#2A2A2A</span>
-          </div>
-          <div className="w-32 h-32 bg-surface border-2 border-border-focus rounded-lg flex flex-col items-center justify-center p-4 animate-glow">
-            <span className="text-sm text-text-secondary">Focus</span>
-            <span className="text-xs text-text-disabled mt-1">#3B82F6</span>
-          </div>
-        </div>
-      </section>
-
-      {/* Accent Colors */}
-      <section className="mb-16">
-        <h2 className="text-xl font-semibold mb-6 text-text-secondary">
-          Accent Colors
-        </h2>
-        <div className="flex flex-wrap gap-4">
-          <ColorSwatch
-            name="Accent"
-            color="bg-accent"
-            hex="#3B82F6"
-          />
-          <ColorSwatch
-            name="Accent Hover"
-            color="bg-accent-hover"
-            hex="#2563EB"
-          />
-        </div>
-      </section>
-
-      {/* Status Colors */}
-      <section className="mb-16">
-        <h2 className="text-xl font-semibold mb-6 text-text-secondary">
-          Status Colors
-        </h2>
-        <div className="flex flex-wrap gap-4">
-          <ColorSwatch
-            name="Warning"
-            color="bg-status-warning"
-            hex="#F59E0B"
-          />
-          <ColorSwatch
-            name="Success"
-            color="bg-status-success"
-            hex="#10B981"
-          />
-          <ColorSwatch
-            name="Bottleneck"
-            color="bg-status-bottleneck"
-            hex="#EF4444"
-          />
-        </div>
-      </section>
-
-      {/* Sticky Note Colors */}
-      <section className="mb-16">
-        <h2 className="text-xl font-semibold mb-6 text-text-secondary">
-          Sticky Note Colors (Muted/Dark)
-        </h2>
-        <div className="flex flex-wrap gap-4">
-          <ColorSwatch
-            name="Yellow"
-            color="bg-sticky-yellow"
-            hex="#78716C"
-          />
-          <ColorSwatch
-            name="Pink"
-            color="bg-sticky-pink"
-            hex="#9D7A8C"
-          />
-          <ColorSwatch
-            name="Blue"
-            color="bg-sticky-blue"
-            hex="#64748B"
-          />
-          <ColorSwatch
-            name="Green"
-            color="bg-sticky-green"
-            hex="#5F7A6A"
-          />
-          <ColorSwatch
-            name="Purple"
-            color="bg-sticky-purple"
-            hex="#7C6F93"
-          />
-        </div>
-      </section>
-
-      {/* Edge/Arrow Colors */}
-      <section className="mb-16">
-        <h2 className="text-xl font-semibold mb-6 text-text-secondary">
-          Edge/Arrow Colors
-        </h2>
-        <div className="flex flex-wrap gap-4">
-          <ColorSwatch
-            name="Default"
-            color="bg-edge"
-            hex="#3A3A3A"
-            textLight
-          />
-          <ColorSwatch
-            name="Active"
-            color="bg-edge-active"
-            hex="#3B82F6"
-          />
-          <ColorSwatch
-            name="Complete"
-            color="bg-edge-complete"
-            hex="#10B981"
-          />
-        </div>
-      </section>
-
-      {/* Interactive Elements */}
-      <section className="mb-16">
-        <h2 className="text-xl font-semibold mb-6 text-text-secondary">
-          Interactive Elements
-        </h2>
-        <div className="flex flex-wrap gap-4 items-center">
-          <button className="px-6 py-3 bg-accent hover:bg-accent-hover text-void font-semibold rounded-lg transition-colors duration-200">
-            Primary Button
-          </button>
-          <button className="px-6 py-3 bg-surface hover:bg-surface-hover border border-border-subtle text-text-primary rounded-lg transition-colors duration-200">
-            Secondary Button
-          </button>
-          <button className="px-6 py-3 bg-status-bottleneck hover:opacity-90 text-void font-semibold rounded-lg transition-opacity duration-200">
-            Bottleneck
-          </button>
-        </div>
-      </section>
-
-      {/* Sample Mission Card */}
-      <section className="mb-16">
-        <h2 className="text-xl font-semibold mb-6 text-text-secondary">
-          Sample Mission Node
-        </h2>
-        <div className="max-w-xs">
-          <div className="bg-surface rounded-lg border-l-4 border-accent p-5 hover:bg-surface-hover transition-colors duration-200">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="w-2 h-2 rounded-full bg-accent"></span>
-              <span className="text-xs font-medium text-accent uppercase tracking-wide">
-                Active
+        {/* Carryover Indicator */}
+        <AnimatePresence>
+          {waitingMissions > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              transition={{ duration: 0.4, delay: 0.7 }}
+              className="mt-6 flex items-center gap-2 text-status-warning"
+            >
+              <span className="w-2 h-2 rounded-full bg-status-warning animate-pulse" />
+              <span className="text-sm">
+                {waitingMissions} mission{waitingMissions !== 1 ? "s" : ""} waiting
+                from yesterday
               </span>
-            </div>
-            <h3 className="text-lg font-semibold mb-2">Design System Setup</h3>
-            <div className="flex items-center gap-3 text-sm text-text-secondary">
-              <span>90 min</span>
-              <span className="text-border-subtle">|</span>
-              <span>5 checkpoints</span>
-            </div>
-          </div>
-        </div>
-      </section>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-      {/* Animation Demos */}
-      <section className="mb-16">
-        <h2 className="text-xl font-semibold mb-6 text-text-secondary">
-          Animations
-        </h2>
-        <div className="flex flex-wrap gap-8 items-center">
-          <div className="flex flex-col items-center gap-2">
-            <div className="w-16 h-16 bg-surface rounded-lg animate-pulse-slow flex items-center justify-center">
-              <span className="text-accent font-mono">8s</span>
-            </div>
-            <span className="text-sm text-text-secondary">Slow Pulse</span>
-          </div>
-          <div className="flex flex-col items-center gap-2">
-            <div className="w-16 h-16 bg-surface rounded-lg animate-glow border border-accent flex items-center justify-center">
-              <span className="text-accent font-mono">2s</span>
-            </div>
-            <span className="text-sm text-text-secondary">Glow</span>
-          </div>
-        </div>
-      </section>
-
-      {/* Spacing Demo */}
-      <section className="mb-16">
-        <h2 className="text-xl font-semibold mb-6 text-text-secondary">
-          Generous Spacing (The Void IS the Feature)
-        </h2>
-        <div className="flex gap-8">
-          <div className="bg-surface rounded-lg p-4 w-24 h-24 flex items-center justify-center">
-            <span className="text-xs text-text-secondary">16px</span>
-          </div>
-          <div className="bg-surface rounded-lg p-8 w-32 h-32 flex items-center justify-center">
-            <span className="text-xs text-text-secondary">32px</span>
-          </div>
-          <div className="bg-surface rounded-lg p-12 w-40 h-40 flex items-center justify-center">
-            <span className="text-xs text-text-secondary">48px</span>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="pt-8 border-t border-border-subtle">
-        <div className="flex items-center justify-between">
-          <p className="text-text-secondary text-sm">
-            MEREO Design System v1.0 - Ready for Implementation
-          </p>
-          <a
-            href="/store-test"
-            className="px-4 py-2 bg-surface hover:bg-surface-hover border border-border-subtle text-text-primary rounded-lg transition-colors text-sm"
+        {/* Dev: Load Seed Data Button (for testing) */}
+        {missions.length === 0 && (
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4, delay: 1 }}
+            onClick={() => loadSeedData()}
+            className="mt-12 px-4 py-2 text-sm text-text-disabled hover:text-text-secondary transition-colors"
           >
-            Test Store &rarr;
+            Load sample missions
+          </motion.button>
+        )}
+
+        {/* Footer Links */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4, delay: 1.2 }}
+          className="fixed bottom-6 flex gap-4 text-sm text-text-disabled"
+        >
+          <a href="/design-system" className="hover:text-text-secondary transition-colors">
+            Design System
           </a>
-        </div>
-      </footer>
-    </div>
+          <span>|</span>
+          <a href="/store-test" className="hover:text-text-secondary transition-colors">
+            Store Test
+          </a>
+        </motion.div>
+      </div>
+
+      {/* End Time Picker Modal */}
+      <AnimatePresence>
+        {isModalOpen && (
+          <EndTimePickerModal
+            onClose={() => setIsModalOpen(false)}
+            onConfirm={handleStartDay}
+            defaultTime={addHours(new Date(), 12)}
+          />
+        )}
+      </AnimatePresence>
+    </>
   );
 }
 
-function ColorSwatch({
-  name,
-  color,
-  hex,
-  textLight = false,
-}: {
-  name: string;
-  color: string;
-  hex: string;
-  textLight?: boolean;
-}) {
+// ============================================
+// End Time Picker Modal Component
+// ============================================
+
+interface EndTimePickerModalProps {
+  onClose: () => void;
+  onConfirm: (endTime: Date) => void;
+  defaultTime: Date;
+}
+
+function EndTimePickerModal({
+  onClose,
+  onConfirm,
+  defaultTime,
+}: EndTimePickerModalProps) {
+  const [selectedHour, setSelectedHour] = useState(defaultTime.getHours());
+  const [selectedMinute, setSelectedMinute] = useState(
+    Math.floor(defaultTime.getMinutes() / 15) * 15
+  );
+
+  const handleConfirm = () => {
+    const endTime = setMinutes(setHours(new Date(), selectedHour), selectedMinute);
+    onConfirm(endTime);
+  };
+
+  // Format hour for display (12-hour format)
+  const formatHour = (hour: number) => {
+    const h = hour % 12 || 12;
+    const ampm = hour >= 12 ? "PM" : "AM";
+    return `${h} ${ampm}`;
+  };
+
+  // Generate hours array (0-23)
+  const hours = Array.from({ length: 24 }, (_, i) => i);
+  // Generate minutes array (0, 15, 30, 45)
+  const minutes = [0, 15, 30, 45];
+
   return (
-    <div
-      className={`w-32 h-32 ${color} rounded-lg flex flex-col items-center justify-center p-4 transition-transform duration-200 hover:scale-105`}
-    >
-      <span
-        className={`text-sm font-medium ${textLight ? "text-text-primary" : "text-void"}`}
+    <>
+      {/* Backdrop */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        onClick={onClose}
+        className="fixed inset-0 bg-void/80 backdrop-blur-sm z-40"
+      />
+
+      {/* Modal */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+        className="fixed inset-0 z-50 flex items-center justify-center p-6 pointer-events-none"
       >
-        {name}
-      </span>
-      <span
-        className={`text-xs mt-1 font-mono ${textLight ? "text-text-secondary" : "text-void/70"}`}
-      >
-        {hex}
-      </span>
-    </div>
+        <div className="w-full max-w-sm bg-surface border border-border-subtle rounded-2xl p-8 shadow-2xl pointer-events-auto">
+          {/* Title */}
+          <h2 className="text-2xl font-semibold text-center mb-2">
+            When does your day end?
+          </h2>
+          <p className="text-text-secondary text-center text-sm mb-8">
+            Set your target end time for today
+          </p>
+
+          {/* Time Picker */}
+          <div className="flex items-center justify-center gap-4 mb-8">
+            {/* Hour Selector */}
+            <div className="flex flex-col items-center">
+              <label className="text-xs text-text-secondary mb-2 uppercase tracking-wide">
+                Hour
+              </label>
+              <select
+                value={selectedHour}
+                onChange={(e) => setSelectedHour(Number(e.target.value))}
+                className="w-28 px-4 py-3 bg-void border border-border-subtle rounded-lg text-text-primary text-center font-mono text-lg appearance-none cursor-pointer focus:outline-none focus:border-border-focus"
+              >
+                {hours.map((hour) => (
+                  <option key={hour} value={hour}>
+                    {formatHour(hour)}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <span className="text-3xl text-text-secondary mt-6">:</span>
+
+            {/* Minute Selector */}
+            <div className="flex flex-col items-center">
+              <label className="text-xs text-text-secondary mb-2 uppercase tracking-wide">
+                Min
+              </label>
+              <select
+                value={selectedMinute}
+                onChange={(e) => setSelectedMinute(Number(e.target.value))}
+                className="w-20 px-4 py-3 bg-void border border-border-subtle rounded-lg text-text-primary text-center font-mono text-lg appearance-none cursor-pointer focus:outline-none focus:border-border-focus"
+              >
+                {minutes.map((min) => (
+                  <option key={min} value={min}>
+                    {min.toString().padStart(2, "0")}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Preview */}
+          <div className="text-center mb-8">
+            <span className="text-text-secondary text-sm">Your day ends at </span>
+            <span className="font-mono text-accent">
+              {formatHour(selectedHour).replace(" ", ":")}
+              {selectedMinute.toString().padStart(2, "0")}
+              {selectedHour >= 12 ? " PM" : " AM"}
+            </span>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-3">
+            <button
+              onClick={onClose}
+              className="flex-1 px-6 py-3 bg-void border border-border-subtle text-text-primary rounded-lg hover:bg-surface-hover transition-colors"
+            >
+              Cancel
+            </button>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleConfirm}
+              className="flex-1 px-6 py-3 bg-accent hover:bg-accent-hover text-void font-semibold rounded-lg transition-colors"
+            >
+              Start My Day
+            </motion.button>
+          </div>
+        </div>
+      </motion.div>
+    </>
   );
 }
