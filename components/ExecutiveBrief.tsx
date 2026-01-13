@@ -12,6 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { useMereoStore } from "@/lib/store";
+import { parseDateString } from "@/lib/utils";
 import type { Mission, Tag, DaySession, ExecutiveBrief as ExecutiveBriefType } from "@/lib/types";
 
 interface ExecutiveBriefProps {
@@ -209,7 +210,7 @@ export function ExecutiveBrief({ isOpen, onClose, onConfirm }: ExecutiveBriefPro
                 <div>
                   <h2 className="text-2xl font-bold">Day Complete</h2>
                   <p className="text-text-secondary">
-                    {format(new Date(currentSession.date), "EEEE, MMMM d, yyyy")}
+                    {format(parseDateString(currentSession.date), "EEEE, MMMM d, yyyy")}
                   </p>
                   <p className="text-sm text-text-disabled">
                     {formatTime(currentSession.startTime)} - {formatTime(currentSession.endTime)}
