@@ -1,7 +1,9 @@
 // ============================================
 // MEREO - Whiteboard Component Exports
-// Whiteboard components will be added in Chunk 6-7
+// Custom node types for React Flow canvas
 // ============================================
 
-// Placeholder - whiteboard components will be added here
-export {};
+export { MissionNode, type MissionNodeData } from "./MissionNode";
+export { CheckpointNode, type CheckpointNodeData } from "./CheckpointNode";
+export { StickyNode, type StickyNodeData } from "./StickyNode";
+export { LinkNode, type LinkNodeData } from "./LinkNode";

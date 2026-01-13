@@ -1,63 +1,83 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { motion, Reorder, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
 import { Lock, ArrowRight } from "lucide-react";
-import { useMereoStore, useCurrentSession, useMissionsByDate, useTags } from "@/lib/store";
+import { useMereoStore } from "@/lib/store";
 import { getTodayDateString, formatTimeDisplay } from "@/lib/utils";
 import { DraggableMissionBlock } from "./MissionBlock";
-import type { Mission } from "@/lib/types";
+import { ExecutiveBrief } from "./ExecutiveBrief";
 
 export function MissionSidebar() {
   const router = useRouter();
+  const [isClient, setIsClient] = useState(false);
+  const [showBrief, setShowBrief] = useState(false);
+  const { currentSession, missions, tags, endDaySession, carryOverIncompleteMissions } = useMereoStore();
+
+  // Only render on client
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   const today = getTodayDateString();
-  const currentSession = useCurrentSession();
-  const todayMissions = useMissionsByDate(today);
-  const tags = useTags();
-  const { reorderMissions, endDaySession } = useMereoStore();
 
-  // Local state for reorder (to enable smooth dragging)
-  const [localMissions, setLocalMissions] = useState<Mission[]>(todayMissions);
+  // Memoize derived values to prevent re-render issues
+  const { todayMissions, hasStartedMission, regularMissions, bottleneckMissions } = useMemo(() => {
+    const todayM = missions
+      .filter((m) => m.scheduledDate === today)
+      .sort((a, b) => a.order - b.order);
 
-  // Check if any mission has been started
-  const hasStartedMission = todayMissions.some(
-    (m) => m.status === "active" || m.status === "completed" || m.status === "bottleneck"
-  );
+    const hasStarted = todayM.some(
+      (m) => m.status === "active" || m.status === "completed" || m.status === "bottleneck"
+    );
+    const regular = todayM.filter((m) => m.status !== "bottleneck");
+    const bottlenecks = todayM.filter((m) => m.status === "bottleneck");
 
-  // Can only reorder if no mission has been started
-  const canReorder = !hasStartedMission;
+    return {
+      todayMissions: todayM,
+      hasStartedMission: hasStarted,
+      regularMissions: regular,
+      bottleneckMissions: bottlenecks
+    };
+  }, [missions, today]);
 
-  // Get active mission
-  const activeMission = todayMissions.find((m) => m.status === "active");
-
-  // Separate bottleneck missions (show at bottom)
-  const bottleneckMissions = todayMissions.filter((m) => m.status === "bottleneck");
-  const regularMissions = todayMissions.filter((m) => m.status !== "bottleneck");
-
-  // Handle reorder
-  const handleReorder = useCallback(
-    (reorderedMissions: Mission[]) => {
-      setLocalMissions(reorderedMissions);
-      // Update store with new order
-      const missionIds = reorderedMissions.map((m) => m.id);
-      reorderMissions(today, missionIds);
-    },
-    [reorderMissions, today]
-  );
-
-  // Handle end day
+  // Handle end day - show executive brief
   const handleEndDay = () => {
+    setShowBrief(true);
+  };
+
+  // Handle confirm end day - actually end session and navigate
+  const handleConfirmEndDay = () => {
     const brief = endDaySession();
     console.log("Executive Brief:", brief);
+    carryOverIncompleteMissions();
+    setShowBrief(false);
     router.push("/");
   };
 
-  if (!currentSession) {
-    return null;
+  // Show nothing until client-side
+  if (!isClient || !currentSession) {
+    return (
+      <aside className="w-[280px] h-full bg-surface border-r border-border-subtle flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+      </aside>
+    );
   }
+
+  // Safely format dates
+  const formatSessionTime = (time: Date | string | undefined): string => {
+    if (!time) return "--:--";
+    try {
+      const date = typeof time === "string" ? new Date(time) : time;
+      if (isNaN(date.getTime())) return "--:--";
+      return formatTimeDisplay(date);
+    } catch {
+      return "--:--";
+    }
+  };
 
   return (
     <aside className="w-[280px] h-full bg-surface border-r border-border-subtle flex flex-col">
@@ -70,8 +90,8 @@ export function MissionSidebar() {
 
         {/* Time range */}
         <p className="text-sm text-text-secondary mb-3">
-          {formatTimeDisplay(new Date(currentSession.startTime))} -{" "}
-          {formatTimeDisplay(new Date(currentSession.endTime))}
+          {formatSessionTime(currentSession.startTime)} -{" "}
+          {formatSessionTime(currentSession.endTime)}
         </p>
 
         {/* Whiteboard link */}
@@ -85,7 +105,7 @@ export function MissionSidebar() {
       </div>
 
       {/* Reorder lock indicator */}
-      {!canReorder && (
+      {hasStartedMission && (
         <div className="px-4 py-2 bg-void/50 flex items-center gap-2 text-xs text-text-disabled">
           <Lock className="w-3 h-3" />
           <span>Order locked after first mission</span>
@@ -94,61 +114,31 @@ export function MissionSidebar() {
 
       {/* Mission List */}
       <div className="flex-1 overflow-y-auto p-4">
-        {canReorder ? (
-          // Draggable list
-          <Reorder.Group
-            axis="y"
-            values={regularMissions}
-            onReorder={handleReorder}
-            className="space-y-3"
-          >
-            <AnimatePresence mode="popLayout">
-              {regularMissions.map((mission) => {
-                const tag = tags.find((t) => t.id === mission.tagId);
-                const isActive = mission.status === "active";
+        <div className="space-y-3">
+          <AnimatePresence mode="popLayout">
+            {regularMissions.map((mission) => {
+              const tag = tags.find((t) => t.id === mission.tagId);
+              const isActive = mission.status === "active";
 
-                return (
-                  <Reorder.Item
-                    key={mission.id}
-                    value={mission}
-                    className="cursor-grab active:cursor-grabbing"
-                    whileDrag={{
-                      scale: 1.02,
-                      boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
-                    }}
-                  >
-                    <DraggableMissionBlock
-                      mission={mission}
-                      tag={tag}
-                      isActive={isActive}
-                      isDraggable={canReorder}
-                    />
-                  </Reorder.Item>
-                );
-              })}
-            </AnimatePresence>
-          </Reorder.Group>
-        ) : (
-          // Static list (no dragging)
-          <div className="space-y-3">
-            <AnimatePresence mode="popLayout">
-              {regularMissions.map((mission) => {
-                const tag = tags.find((t) => t.id === mission.tagId);
-                const isActive = mission.status === "active";
-
-                return (
+              return (
+                <motion.div
+                  key={mission.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  layout
+                >
                   <DraggableMissionBlock
-                    key={mission.id}
                     mission={mission}
                     tag={tag}
                     isActive={isActive}
                     isDraggable={false}
                   />
-                );
-              })}
-            </AnimatePresence>
-          </div>
-        )}
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+        </div>
 
         {/* Bottleneck missions at bottom */}
         {bottleneckMissions.length > 0 && (
@@ -160,31 +150,21 @@ export function MissionSidebar() {
               {bottleneckMissions.map((mission) => {
                 const tag = tags.find((t) => t.id === mission.tagId);
                 return (
-                  <DraggableMissionBlock
+                  <motion.div
                     key={mission.id}
-                    mission={mission}
-                    tag={tag}
-                    isActive={false}
-                    isDraggable={false}
-                  />
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                  >
+                    <DraggableMissionBlock
+                      mission={mission}
+                      tag={tag}
+                      isActive={false}
+                      isDraggable={false}
+                    />
+                  </motion.div>
                 );
               })}
             </div>
-          </div>
-        )}
-
-        {/* Empty state */}
-        {todayMissions.length === 0 && (
-          <div className="text-center py-8">
-            <p className="text-text-disabled text-sm mb-4">
-              No missions scheduled
-            </p>
-            <Link
-              href="/scheduler"
-              className="text-accent text-sm hover:text-accent-hover transition-colors"
-            >
-              Plan your day &rarr;
-            </Link>
           </div>
         )}
       </div>
@@ -198,6 +178,13 @@ export function MissionSidebar() {
           End Day
         </button>
       </div>
+
+      {/* Executive Brief Modal */}
+      <ExecutiveBrief
+        isOpen={showBrief}
+        onClose={() => setShowBrief(false)}
+        onConfirm={handleConfirmEndDay}
+      />
     </aside>
   );
 }
