@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -12,13 +12,17 @@ import {
 import { useMereoStore } from "@/lib/store";
 import { formatDateKey, cn } from "@/lib/utils";
 import { MiniCalendar } from "@/components/MiniCalendar";
+import { MissionCard } from "@/components/MissionCard";
 
 export default function SchedulerPage() {
   const [isClient, setIsClient] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
   const [showTagDropdown, setShowTagDropdown] = useState(false);
-  const { tags, missions, loadSeedData } = useMereoStore();
+  const [draggedMissionId, setDraggedMissionId] = useState<string | null>(null);
+  const [dragOverMissionId, setDragOverMissionId] = useState<string | null>(null);
+
+  const { tags, missions, loadSeedData, reorderMissions } = useMereoStore();
 
   // Only render on client
   useEffect(() => {
@@ -45,18 +49,58 @@ export default function SchedulerPage() {
   }, [missions]);
 
   // Get missions for selected date (optionally filtered by tag)
+  const selectedDateKey = formatDateKey(selectedDate);
+
   const filteredMissions = useMemo(() => {
-    const selectedDateKey = formatDateKey(selectedDate);
     return missions
       .filter((m) => m.scheduledDate === selectedDateKey)
       .filter((m) => (selectedTagId ? m.tagId === selectedTagId : true))
       .sort((a, b) => a.order - b.order);
-  }, [missions, selectedDate, selectedTagId]);
+  }, [missions, selectedDateKey, selectedTagId]);
 
   // Get selected tag
   const selectedTag = selectedTagId
     ? tags.find((t) => t.id === selectedTagId)
     : null;
+
+  // ============================================
+  // Drag and Drop Handlers
+  // ============================================
+  const handleDragStart = useCallback((missionId: string) => {
+    setDraggedMissionId(missionId);
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent, missionId: string) => {
+    e.preventDefault();
+    if (draggedMissionId && missionId !== draggedMissionId) {
+      setDragOverMissionId(missionId);
+    }
+  }, [draggedMissionId]);
+
+  const handleDragEnd = useCallback(() => {
+    if (draggedMissionId && dragOverMissionId) {
+      // Get current order
+      const currentMissions = missions
+        .filter((m) => m.scheduledDate === selectedDateKey)
+        .sort((a, b) => a.order - b.order);
+
+      const draggedIndex = currentMissions.findIndex((m) => m.id === draggedMissionId);
+      const targetIndex = currentMissions.findIndex((m) => m.id === dragOverMissionId);
+
+      if (draggedIndex !== -1 && targetIndex !== -1) {
+        // Create new order
+        const newOrder = [...currentMissions];
+        const [removed] = newOrder.splice(draggedIndex, 1);
+        newOrder.splice(targetIndex, 0, removed);
+
+        // Update store
+        reorderMissions(selectedDateKey, newOrder.map((m) => m.id));
+      }
+    }
+
+    setDraggedMissionId(null);
+    setDragOverMissionId(null);
+  }, [draggedMissionId, dragOverMissionId, missions, selectedDateKey, reorderMissions]);
 
   // Loading state
   if (!isClient) {
@@ -286,114 +330,42 @@ export default function SchedulerPage() {
             </motion.button>
           </motion.div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             <AnimatePresence mode="popLayout">
               {filteredMissions.map((mission, index) => {
                 const tag = tags.find((t) => t.id === mission.tagId);
+                const isDragging = draggedMissionId === mission.id;
+                const isDragOver = dragOverMissionId === mission.id;
+
                 return (
                   <motion.div
                     key={mission.id}
                     initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    animate={{
+                      opacity: 1,
+                      y: 0,
+                      scale: isDragOver ? 1.02 : 1,
+                    }}
                     exit={{ opacity: 0, x: -20 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="bg-surface rounded-xl p-5 border-l-4 hover:bg-surface-hover transition-colors group"
-                    style={{ borderColor: tag?.color || "#3B82F6" }}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div>
-                        {tag && (
-                          <span
-                            className="inline-block px-2 py-0.5 rounded text-xs font-medium mb-2"
-                            style={{
-                              backgroundColor: tag.color + "20",
-                              color: tag.color,
-                            }}
-                          >
-                            {tag.name}
-                          </span>
-                        )}
-                        <h3 className="text-lg font-semibold">
-                          {mission.title}
-                        </h3>
-                        <p className="text-text-secondary text-sm mt-1">
-                          {mission.checkpoints.length} checkpoints |{" "}
-                          {mission.totalEstimatedMinutes} min total
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button className="px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary hover:bg-void rounded-lg transition-colors">
-                          Edit
-                        </button>
-                        <button className="px-3 py-1.5 text-sm text-text-secondary hover:text-status-bottleneck hover:bg-void rounded-lg transition-colors">
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Checkpoint Preview */}
-                    <div className="mt-4 pt-4 border-t border-border-subtle">
-                      <div className="space-y-2">
-                        {mission.checkpoints.slice(0, 3).map((cp) => (
-                          <div
-                            key={cp.id}
-                            className="flex items-center gap-3 text-sm text-text-secondary"
-                          >
-                            <span
-                              className={cn(
-                                "w-4 h-4 rounded border flex items-center justify-center",
-                                cp.isComplete
-                                  ? "border-status-success bg-status-success/20"
-                                  : "border-border-subtle"
-                              )}
-                            >
-                              {cp.isComplete && (
-                                <span className="w-2 h-2 rounded-sm bg-status-success" />
-                              )}
-                            </span>
-                            <span
-                              className={
-                                cp.isComplete
-                                  ? "line-through text-text-disabled"
-                                  : ""
-                              }
-                            >
-                              {cp.title}
-                            </span>
-                            <span className="text-text-disabled text-xs ml-auto font-mono">
-                              {cp.estimatedMinutes}m
-                            </span>
-                          </div>
-                        ))}
-                        {mission.checkpoints.length > 3 && (
-                          <p className="text-text-disabled text-xs pl-7">
-                            +{mission.checkpoints.length - 3} more checkpoints
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Status Badge */}
-                    {mission.status !== "scheduled" && (
-                      <div className="mt-3">
-                        <span
-                          className={cn(
-                            "inline-block px-2 py-0.5 rounded text-xs font-medium",
-                            mission.status === "completed" &&
-                              "bg-status-success/20 text-status-success",
-                            mission.status === "active" &&
-                              "bg-accent/20 text-accent",
-                            mission.status === "bottleneck" &&
-                              "bg-status-bottleneck/20 text-status-bottleneck",
-                            mission.status === "incomplete" &&
-                              "bg-text-disabled/20 text-text-disabled"
-                          )}
-                        >
-                          {mission.status.charAt(0).toUpperCase() +
-                            mission.status.slice(1)}
-                        </span>
-                      </div>
+                    transition={{ delay: index * 0.03 }}
+                    draggable
+                    onDragStart={() => handleDragStart(mission.id)}
+                    onDragOver={(e) => handleDragOver(e, mission.id)}
+                    onDragEnd={handleDragEnd}
+                    className={cn(
+                      "transition-all",
+                      isDragging && "opacity-50",
+                      isDragOver && "ring-2 ring-accent ring-offset-2 ring-offset-void rounded-xl"
                     )}
+                  >
+                    <MissionCard
+                      mission={mission}
+                      tag={tag}
+                      isDragging={isDragging}
+                      dragHandleProps={{
+                        onMouseDown: (e) => e.stopPropagation(),
+                      }}
+                    />
                   </motion.div>
                 );
               })}
