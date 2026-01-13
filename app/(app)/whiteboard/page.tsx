@@ -36,91 +36,182 @@ const nodeTypes = {
 };
 
 // Sample hardcoded nodes for testing
+// These use fallback data since store may not have matching missions
 const initialNodes: Node[] = [
+  // Mission 1 - Active with checkpoints
   {
     id: "mission-1",
     type: "mission",
-    position: { x: 100, y: 100 },
+    position: { x: 100, y: 50 },
     data: {
+      missionId: "demo-mission-1",
       label: "Finish Q4 Report",
-      status: "in-progress",
+      status: "active",
       tagColor: "#3B82F6",
-      timeEstimate: 45,
+      tagName: "Work",
+      totalMinutes: 90,
+      checkpointCount: 3,
+      completedCheckpoints: 1,
     },
   },
+  // Checkpoints for Mission 1
   {
-    id: "mission-2",
-    type: "mission",
-    position: { x: 400, y: 100 },
-    data: {
-      label: "Review Team Proposals",
-      status: "pending",
-      tagColor: "#10B981",
-      timeEstimate: 30,
-    },
-  },
-  {
-    id: "mission-3",
-    type: "mission",
-    position: { x: 250, y: 300 },
-    data: {
-      label: "Update Project Timeline",
-      status: "completed",
-      tagColor: "#3B82F6",
-      timeEstimate: 20,
-      timeActual: 18,
-    },
-  },
-  {
-    id: "checkpoint-1",
+    id: "checkpoint-1-1",
     type: "checkpoint",
-    position: { x: 250, y: 450 },
+    position: { x: 20, y: 320 },
     data: {
-      label: "Morning Block Done",
+      missionId: "demo-mission-1",
+      checkpointId: "demo-cp-1",
+      label: "Gather data from analytics",
+      estimatedMinutes: 30,
+      isComplete: true,
+    },
+  },
+  {
+    id: "checkpoint-1-2",
+    type: "checkpoint",
+    position: { x: 200, y: 320 },
+    data: {
+      missionId: "demo-mission-1",
+      checkpointId: "demo-cp-2",
+      label: "Draft executive summary",
+      estimatedMinutes: 30,
       isComplete: false,
     },
   },
   {
-    id: "sticky-1",
-    type: "sticky",
-    position: { x: 550, y: 280 },
+    id: "checkpoint-1-3",
+    type: "checkpoint",
+    position: { x: 20, y: 430 },
     data: {
-      content: "Remember to check Slack before the standup call!",
-      color: "yellow",
+      missionId: "demo-mission-1",
+      checkpointId: "demo-cp-3",
+      label: "Review and finalize",
+      estimatedMinutes: 30,
+      isComplete: false,
     },
   },
+  // Mission 2 - Scheduled/Locked
+  {
+    id: "mission-2",
+    type: "mission",
+    position: { x: 420, y: 50 },
+    data: {
+      missionId: "demo-mission-2",
+      label: "Review Team Proposals",
+      status: "scheduled",
+      tagColor: "#10B981",
+      tagName: "Management",
+      totalMinutes: 45,
+      checkpointCount: 2,
+      completedCheckpoints: 0,
+    },
+  },
+  // Mission 3 - Completed
+  {
+    id: "mission-3",
+    type: "mission",
+    position: { x: 420, y: 320 },
+    data: {
+      missionId: "demo-mission-3",
+      label: "Morning standup call",
+      status: "completed",
+      tagColor: "#8B5CF6",
+      tagName: "Meetings",
+      totalMinutes: 15,
+      checkpointCount: 1,
+      completedCheckpoints: 1,
+    },
+  },
+  // Mission 4 - Bottleneck
+  {
+    id: "mission-4",
+    type: "mission",
+    position: { x: 700, y: 50 },
+    data: {
+      missionId: "demo-mission-4",
+      label: "Deploy to production",
+      status: "bottleneck",
+      tagColor: "#EF4444",
+      tagName: "Dev",
+      totalMinutes: 60,
+      checkpointCount: 4,
+      completedCheckpoints: 2,
+    },
+  },
+  // Sticky note
+  {
+    id: "sticky-1",
+    type: "sticky",
+    position: { x: 700, y: 280 },
+    data: {
+      content: "Waiting for DevOps approval before deploying",
+      color: "pink",
+    },
+  },
+  // Link card
   {
     id: "link-1",
     type: "link",
-    position: { x: 100, y: 450 },
+    position: { x: 700, y: 430 },
     data: {
-      title: "Project Dashboard",
-      url: "https://dashboard.example.com/project",
+      title: "Deployment Checklist",
+      url: "https://notion.so/deployment-checklist",
     },
   },
 ];
 
 const initialEdges: Edge[] = [
+  // Mission 1 to its checkpoints
   {
-    id: "e1-3",
+    id: "e-m1-cp1",
     source: "mission-1",
-    target: "mission-3",
+    sourceHandle: "checkpoint-out-left",
+    target: "checkpoint-1-1",
     type: "smoothstep",
     style: { stroke: "#3B82F6", strokeWidth: 2 },
   },
   {
-    id: "e2-3",
-    source: "mission-2",
-    target: "mission-3",
+    id: "e-m1-cp2",
+    source: "mission-1",
+    sourceHandle: "checkpoint-out-right",
+    target: "checkpoint-1-2",
     type: "smoothstep",
-    style: { stroke: "#10B981", strokeWidth: 2 },
+    style: { stroke: "#3B82F6", strokeWidth: 2 },
   },
   {
-    id: "e3-c1",
-    source: "mission-3",
-    target: "checkpoint-1",
+    id: "e-cp1-cp3",
+    source: "checkpoint-1-1",
+    target: "checkpoint-1-3",
     type: "smoothstep",
-    style: { stroke: "#F59E0B", strokeWidth: 2 },
+    style: { stroke: "#3B82F6", strokeWidth: 1.5 },
+  },
+  // Mission 1 to Mission 2 (flow)
+  {
+    id: "e-m1-m2",
+    source: "mission-1",
+    sourceHandle: "mission-out",
+    target: "mission-2",
+    type: "smoothstep",
+    style: { stroke: "#6B7280", strokeWidth: 2, strokeDasharray: "5,5" },
+  },
+  // Mission 2 to Mission 3
+  {
+    id: "e-m2-m3",
+    source: "mission-2",
+    sourceHandle: "mission-out",
+    target: "mission-3",
+    type: "smoothstep",
+    style: { stroke: "#6B7280", strokeWidth: 2, strokeDasharray: "5,5" },
+  },
+  // Mission 4 to sticky (reference)
+  {
+    id: "e-m4-sticky",
+    source: "mission-4",
+    sourceHandle: "mission-out",
+    target: "sticky-1",
+    type: "smoothstep",
+    style: { stroke: "#EF4444", strokeWidth: 1.5 },
   },
 ];
 
