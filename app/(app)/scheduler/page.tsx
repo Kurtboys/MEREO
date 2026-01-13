@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -13,12 +13,14 @@ import { useMereoStore } from "@/lib/store";
 import { formatDateKey, cn } from "@/lib/utils";
 import { MiniCalendar } from "@/components/MiniCalendar";
 import { MissionCard } from "@/components/MissionCard";
+import { CreateMissionModal } from "@/components/CreateMissionModal";
 
 export default function SchedulerPage() {
   const [isClient, setIsClient] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
   const [showTagDropdown, setShowTagDropdown] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [draggedMissionId, setDraggedMissionId] = useState<string | null>(null);
   const [dragOverMissionId, setDragOverMissionId] = useState<string | null>(null);
 
@@ -287,6 +289,7 @@ export default function SchedulerPage() {
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
+            onClick={() => setShowCreateModal(true)}
             className="flex items-center gap-2 px-6 py-3 bg-accent hover:bg-accent-hover text-void font-semibold rounded-xl transition-colors"
           >
             <Plus className="w-5 h-5" />
@@ -323,6 +326,7 @@ export default function SchedulerPage() {
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
+              onClick={() => setShowCreateModal(true)}
               className="flex items-center gap-2 px-6 py-3 bg-accent hover:bg-accent-hover text-void font-semibold rounded-xl transition-colors mt-4"
             >
               <Plus className="w-5 h-5" />
@@ -373,6 +377,17 @@ export default function SchedulerPage() {
           </div>
         )}
       </div>
+
+      {/* Create Mission Modal */}
+      <AnimatePresence>
+        {showCreateModal && (
+          <CreateMissionModal
+            isOpen={showCreateModal}
+            onClose={() => setShowCreateModal(false)}
+            initialDate={selectedDate}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
