@@ -43,7 +43,15 @@ export function ActiveMissionFocus() {
       return;
     }
 
-    const startTime = new Date(activeMission.startedAt).getTime();
+    const startDate = new Date(activeMission.startedAt);
+    const startTime = startDate.getTime();
+
+    // Guard against invalid dates
+    if (isNaN(startTime)) {
+      setElapsedSeconds(0);
+      setIsOvertime(false);
+      return;
+    }
 
     const updateTimer = () => {
       const now = Date.now();

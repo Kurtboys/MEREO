@@ -59,6 +59,18 @@ export function MissionSidebar() {
     return null;
   }
 
+  // Safely format dates - handle both Date objects and ISO strings
+  const formatSessionTime = (time: Date | string | undefined): string => {
+    if (!time) return "--:--";
+    try {
+      const date = typeof time === "string" ? new Date(time) : time;
+      if (isNaN(date.getTime())) return "--:--";
+      return formatTimeDisplay(date);
+    } catch {
+      return "--:--";
+    }
+  };
+
   return (
     <aside className="w-[280px] h-full bg-surface border-r border-border-subtle flex flex-col">
       {/* Header */}
@@ -70,8 +82,8 @@ export function MissionSidebar() {
 
         {/* Time range */}
         <p className="text-sm text-text-secondary mb-3">
-          {formatTimeDisplay(new Date(currentSession.startTime))} -{" "}
-          {formatTimeDisplay(new Date(currentSession.endTime))}
+          {formatSessionTime(currentSession.startTime)} -{" "}
+          {formatSessionTime(currentSession.endTime)}
         </p>
 
         {/* Whiteboard link */}
