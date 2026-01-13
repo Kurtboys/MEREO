@@ -70,10 +70,12 @@ const config: Config = {
         },
       },
       transitionDuration: {
+        DEFAULT: "200ms",
         "250": "250ms",
         "300": "300ms",
       },
       transitionTimingFunction: {
+        DEFAULT: "cubic-bezier(0.4, 0, 0.2, 1)",
         "ease-out-smooth": "cubic-bezier(0.25, 0.1, 0.25, 1)",
       },
       spacing: {
