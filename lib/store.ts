@@ -25,6 +25,7 @@ import {
   getMinutesDifference,
   calculateTotalMinutes,
 } from "./utils";
+import { createSafeStorage } from "./safe-storage";
 
 // ============================================
 // Store Interface
@@ -916,7 +917,7 @@ export const useMereoStore = create<MereoStore>()(
     }),
     {
       name: "mereo-storage",
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => createSafeStorage()),
       partialize: (state) => ({
         tags: state.tags,
         missions: state.missions,

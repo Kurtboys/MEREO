@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { format, addHours, setHours, setMinutes } from "date-fns";
 import { useMereoStore, useStoreHydration } from "@/lib/store";
+import { useToast } from "@/components/Toast";
 import { getTodayDateString } from "@/lib/utils";
 
 export default function LoginPage() {
   const router = useRouter();
   const hydrated = useStoreHydration();
+  const { dayStarted, success } = useToast();
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { missions, currentSession, startDaySession, loadSeedData } = useMereoStore();
@@ -55,10 +57,16 @@ export default function LoginPage() {
     (endTime: Date) => {
       startDaySession(endTime);
       setIsModalOpen(false);
+      dayStarted();
       router.push("/today");
     },
-    [startDaySession, router]
+    [startDaySession, router, dayStarted]
   );
+
+  const handleLoadSeedData = useCallback(() => {
+    loadSeedData();
+    success("Sample data loaded", "3 missions added to your schedule");
+  }, [loadSeedData, success]);
 
   // Show loading state until client hydrates
   if (!currentTime || !hydrated) {
@@ -142,7 +150,7 @@ export default function LoginPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4, delay: 1 }}
-            onClick={() => loadSeedData()}
+            onClick={handleLoadSeedData}
             className="mt-12 px-4 py-2 text-sm text-text-disabled hover:text-text-secondary transition-colors"
           >
             Load sample missions

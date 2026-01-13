@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, AlertTriangle, Play, Clock, Sparkles } from "lucide-react";
 import { useMereoStore } from "@/lib/store";
+import { useToast } from "@/components/Toast";
 import { getTodayDateString, cn } from "@/lib/utils";
 import { Timer } from "./Timer";
 import { BottleneckModal } from "./BottleneckModal";
@@ -16,6 +17,7 @@ export function MissionFocus() {
   const [completedMissionTitle, setCompletedMissionTitle] = useState("");
   const prevMissionIdRef = useRef<string | null>(null);
   const today = getTodayDateString();
+  const { missionComplete, checkpointComplete } = useToast();
 
   const {
     missions,
@@ -61,28 +63,32 @@ export function MissionFocus() {
         uncompleteCheckpoint(activeMission.id, checkpoint.id);
       } else {
         completeCheckpoint(activeMission.id, checkpoint.id);
+        checkpointComplete(checkpoint.title);
       }
     },
-    [activeMission, completeCheckpoint, uncompleteCheckpoint]
+    [activeMission, completeCheckpoint, uncompleteCheckpoint, checkpointComplete]
   );
 
   // Handle complete mission with celebration
   const handleCompleteMission = useCallback(() => {
     if (!activeMission) return;
 
+    const title = activeMission.title;
+
     // Show celebration briefly
-    setCompletedMissionTitle(activeMission.title);
+    setCompletedMissionTitle(title);
     setShowCompleteCelebration(true);
 
     // Complete mission after brief delay to show celebration
     setTimeout(() => {
       completeMission(activeMission.id);
+      missionComplete(title);
       // Hide celebration after another moment
       setTimeout(() => {
         setShowCompleteCelebration(false);
       }, 300);
     }, 600);
-  }, [activeMission, completeMission]);
+  }, [activeMission, completeMission, missionComplete]);
 
   // Handle bottleneck
   const handleBottleneck = useCallback(

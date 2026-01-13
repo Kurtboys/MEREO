@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -12,6 +11,7 @@ import {
   Settings,
 } from "lucide-react";
 import { useMereoStore } from "@/lib/store";
+import { useToast } from "@/components/Toast";
 import { formatDateKey, cn } from "@/lib/utils";
 import { MiniCalendar } from "@/components/MiniCalendar";
 import { MissionCard } from "@/components/MissionCard";
@@ -19,7 +19,6 @@ import { CreateMissionModal } from "@/components/CreateMissionModal";
 import { TagManager } from "@/components/TagManager";
 
 export default function SchedulerPage() {
-  const router = useRouter();
   const [isClient, setIsClient] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
@@ -29,19 +28,19 @@ export default function SchedulerPage() {
   const [draggedMissionId, setDraggedMissionId] = useState<string | null>(null);
   const [dragOverMissionId, setDragOverMissionId] = useState<string | null>(null);
 
-  const { tags, missions, currentSession, loadSeedData, reorderMissions } = useMereoStore();
+  const { tags, missions, loadSeedData, reorderMissions } = useMereoStore();
+  const { success } = useToast();
 
   // Only render on client
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  // Redirect if no session
-  useEffect(() => {
-    if (isClient && (!currentSession || !currentSession.isActive)) {
-      router.push("/");
-    }
-  }, [isClient, currentSession, router]);
+  // Handle seed data with toast
+  const handleLoadSeedData = useCallback(() => {
+    loadSeedData();
+    success("Sample data loaded", "3 missions added to your schedule");
+  }, [loadSeedData, success]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -121,15 +120,6 @@ export default function SchedulerPage() {
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  // No session state - redirect
-  if (!currentSession || !currentSession.isActive) {
-    return (
-      <div className="flex-1 flex items-center justify-center">
-        <p className="text-text-secondary">Redirecting to login...</p>
       </div>
     );
   }
@@ -347,7 +337,7 @@ export default function SchedulerPage() {
             </p>
             {missions.length === 0 && (
               <button
-                onClick={() => loadSeedData()}
+                onClick={handleLoadSeedData}
                 className="px-4 py-2 text-sm text-accent hover:text-accent-hover transition-colors"
               >
                 Load sample missions
