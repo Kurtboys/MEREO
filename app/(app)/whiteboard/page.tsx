@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -16,12 +16,15 @@ import {
   type Connection,
   type Edge,
   type Node,
+  type NodeChange,
   BackgroundVariant,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { ArrowLeft, ChevronDown, Archive, StickyNote, Link2, Plus } from "lucide-react";
+import { ArrowLeft, ChevronDown, Archive, StickyNote, Link2 } from "lucide-react";
 import { useMereoStore } from "@/lib/store";
 import { getTodayDateString, formatDateDisplay, cn, generateId } from "@/lib/utils";
+import { generateWhiteboardLayout, parseNodeId } from "@/lib/whiteboard-layout";
+import type { StickyNoteColor } from "@/lib/types";
 import {
   MissionNode,
   CheckpointNode,
@@ -50,195 +53,25 @@ const edgeTypes = {
   checkpoint: CheckpointEdge,
 };
 
-// Sample hardcoded nodes for testing
-// These use fallback data since store may not have matching missions
-const initialNodes: Node[] = [
-  // Mission 1 - Active with checkpoints
-  {
-    id: "mission-1",
-    type: "mission",
-    position: { x: 100, y: 50 },
-    data: {
-      missionId: "demo-mission-1",
-      label: "Finish Q4 Report",
-      status: "active",
-      tagColor: "#3B82F6",
-      tagName: "Work",
-      totalMinutes: 90,
-      checkpointCount: 3,
-      completedCheckpoints: 1,
-    },
-  },
-  // Checkpoints for Mission 1
-  {
-    id: "checkpoint-1-1",
-    type: "checkpoint",
-    position: { x: 20, y: 320 },
-    data: {
-      missionId: "demo-mission-1",
-      checkpointId: "demo-cp-1",
-      label: "Gather data from analytics",
-      estimatedMinutes: 30,
-      isComplete: true,
-    },
-  },
-  {
-    id: "checkpoint-1-2",
-    type: "checkpoint",
-    position: { x: 200, y: 320 },
-    data: {
-      missionId: "demo-mission-1",
-      checkpointId: "demo-cp-2",
-      label: "Draft executive summary",
-      estimatedMinutes: 30,
-      isComplete: false,
-    },
-  },
-  {
-    id: "checkpoint-1-3",
-    type: "checkpoint",
-    position: { x: 20, y: 430 },
-    data: {
-      missionId: "demo-mission-1",
-      checkpointId: "demo-cp-3",
-      label: "Review and finalize",
-      estimatedMinutes: 30,
-      isComplete: false,
-    },
-  },
-  // Mission 2 - Scheduled/Locked
-  {
-    id: "mission-2",
-    type: "mission",
-    position: { x: 420, y: 50 },
-    data: {
-      missionId: "demo-mission-2",
-      label: "Review Team Proposals",
-      status: "scheduled",
-      tagColor: "#10B981",
-      tagName: "Management",
-      totalMinutes: 45,
-      checkpointCount: 2,
-      completedCheckpoints: 0,
-    },
-  },
-  // Mission 3 - Completed
-  {
-    id: "mission-3",
-    type: "mission",
-    position: { x: 420, y: 320 },
-    data: {
-      missionId: "demo-mission-3",
-      label: "Morning standup call",
-      status: "completed",
-      tagColor: "#8B5CF6",
-      tagName: "Meetings",
-      totalMinutes: 15,
-      checkpointCount: 1,
-      completedCheckpoints: 1,
-    },
-  },
-  // Mission 4 - Bottleneck
-  {
-    id: "mission-4",
-    type: "mission",
-    position: { x: 700, y: 50 },
-    data: {
-      missionId: "demo-mission-4",
-      label: "Deploy to production",
-      status: "bottleneck",
-      tagColor: "#EF4444",
-      tagName: "Dev",
-      totalMinutes: 60,
-      checkpointCount: 4,
-      completedCheckpoints: 2,
-    },
-  },
-  // Sticky note (using new StickyNoteNode)
-  {
-    id: "sticky-1",
-    type: "stickyNote",
-    position: { x: 700, y: 280 },
-    data: {
-      content: "Waiting for DevOps approval before deploying",
-      color: "pink",
-    },
-    style: { width: 180, height: 150 },
-  },
-  // Link card (using new LinkCardNode)
-  {
-    id: "link-1",
-    type: "linkCard",
-    position: { x: 700, y: 480 },
-    data: {
-      title: "Deployment Checklist",
-      url: "https://notion.so/deployment-checklist",
-    },
-  },
-];
+// Debounce helper
+function useDebouncedCallback<T extends (...args: Parameters<T>) => void>(
+  callback: T,
+  delay: number
+): T {
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-const initialEdges: Edge[] = [
-  // Mission 1 to its checkpoints (using checkpoint edge type)
-  {
-    id: "e-m1-cp1",
-    source: "mission-1",
-    sourceHandle: "checkpoint-out-left",
-    target: "checkpoint-1-1",
-    type: "checkpoint",
-    data: { isComplete: true, parentMissionActive: true },
-  },
-  {
-    id: "e-m1-cp2",
-    source: "mission-1",
-    sourceHandle: "checkpoint-out-right",
-    target: "checkpoint-1-2",
-    type: "checkpoint",
-    data: { isComplete: false, parentMissionActive: true },
-  },
-  {
-    id: "e-cp1-cp3",
-    source: "checkpoint-1-1",
-    target: "checkpoint-1-3",
-    type: "checkpoint",
-    data: { isComplete: false, parentMissionActive: true },
-  },
-  // Mission 1 to Mission 2 (using mission edge type - active)
-  {
-    id: "e-m1-m2",
-    source: "mission-1",
-    sourceHandle: "mission-out",
-    target: "mission-2",
-    type: "mission",
-    data: { sourceStatus: "active", targetStatus: "scheduled" },
-  },
-  // Mission 2 to Mission 3 (scheduled to completed)
-  {
-    id: "e-m2-m3",
-    source: "mission-2",
-    sourceHandle: "mission-out",
-    target: "mission-3",
-    type: "mission",
-    data: { sourceStatus: "scheduled", targetStatus: "completed" },
-  },
-  // Mission 3 to Mission 4 (completed edge)
-  {
-    id: "e-m3-m4",
-    source: "mission-3",
-    sourceHandle: "mission-out",
-    target: "mission-4",
-    type: "mission",
-    data: { sourceStatus: "completed", targetStatus: "bottleneck" },
-  },
-  // Mission 4 to sticky (reference - bottleneck)
-  {
-    id: "e-m4-sticky",
-    source: "mission-4",
-    sourceHandle: "mission-out",
-    target: "sticky-1",
-    type: "smoothstep",
-    style: { stroke: "#EF4444", strokeWidth: 1.5 },
-  },
-];
+  return useCallback(
+    ((...args: Parameters<T>) => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      timeoutRef.current = setTimeout(() => {
+        callback(...args);
+      }, delay);
+    }) as T,
+    [callback, delay]
+  );
+}
 
 // Inner component that uses useReactFlow
 function WhiteboardContent() {
@@ -247,11 +80,85 @@ function WhiteboardContent() {
   const [isClient, setIsClient] = useState(false);
   const [showArchiveDropdown, setShowArchiveDropdown] = useState(false);
   const [showAddLinkModal, setShowAddLinkModal] = useState(false);
-  const { currentSession } = useMereoStore();
+
+  // Store state
+  const {
+    currentSession,
+    missions,
+    tags,
+    whiteboards,
+    getMissionsByDate,
+    initializeWhiteboard,
+    updateNodePosition,
+    addStickyNote,
+    updateStickyNote,
+    deleteStickyNote,
+    addLinkCard,
+    deleteLinkCard,
+  } = useMereoStore();
+
+  const today = getTodayDateString();
+  const todayMissions = useMemo(() => getMissionsByDate(today), [getMissionsByDate, today]);
+  const whiteboard = whiteboards[today] || null;
+
+  // Generate initial layout from store data
+  const { nodes: initialNodes, edges: initialEdges } = useMemo(() => {
+    if (!isClient) return { nodes: [], edges: [] };
+    return generateWhiteboardLayout(todayMissions, tags, whiteboard);
+  }, [isClient, todayMissions, tags, whiteboard]);
 
   // React Flow state
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+  // Update nodes when missions or whiteboard changes
+  useEffect(() => {
+    if (isClient && todayMissions.length > 0) {
+      const { nodes: newNodes, edges: newEdges } = generateWhiteboardLayout(
+        todayMissions,
+        tags,
+        whiteboard
+      );
+      setNodes(newNodes);
+      setEdges(newEdges);
+    }
+  }, [isClient, todayMissions, tags, whiteboard, setNodes, setEdges]);
+
+  // Initialize whiteboard if it doesn't exist
+  useEffect(() => {
+    if (isClient && currentSession && !whiteboard && todayMissions.length > 0) {
+      initializeWhiteboard(today, todayMissions);
+    }
+  }, [isClient, currentSession, whiteboard, todayMissions, today, initializeWhiteboard]);
+
+  // Debounced position save
+  const saveNodePosition = useDebouncedCallback(
+    useCallback(
+      (nodeId: string, nodeType: "mission" | "checkpoint", position: { x: number; y: number }) => {
+        updateNodePosition(today, nodeId, nodeType, position);
+      },
+      [today, updateNodePosition]
+    ),
+    300
+  );
+
+  // Handle node changes with position tracking
+  const handleNodesChange = useCallback(
+    (changes: NodeChange<Node>[]) => {
+      onNodesChange(changes);
+
+      // Save positions on drag end
+      changes.forEach((change) => {
+        if (change.type === "position" && change.dragging === false && change.position) {
+          const parsed = parseNodeId(change.id);
+          if (parsed && (parsed.type === "mission" || parsed.type === "checkpoint")) {
+            saveNodePosition(parsed.id, parsed.type as "mission" | "checkpoint", change.position);
+          }
+        }
+      });
+    },
+    [onNodesChange, saveNodePosition]
+  );
 
   // Handle edge connections
   const onConnect = useCallback(
@@ -281,35 +188,68 @@ function WhiteboardContent() {
   // Add a new sticky note
   const handleAddNote = useCallback(() => {
     const center = getViewportCenter();
+    const noteId = generateId();
+
+    // Add to store first
+    addStickyNote(today, {
+      content: "",
+      color: "yellow" as StickyNoteColor,
+      position: { x: center.x - 75, y: center.y - 75 },
+      size: { width: 150, height: 150 },
+    });
+
+    // Add to React Flow nodes
     const newNode: Node = {
-      id: `sticky-${generateId()}`,
+      id: `sticky-${noteId}`,
       type: "stickyNote",
       position: { x: center.x - 75, y: center.y - 75 },
       data: {
         content: "",
         color: "yellow",
+        onDelete: (id: string) => {
+          const parsed = parseNodeId(id);
+          if (parsed) deleteStickyNote(today, parsed.id);
+        },
+        onUpdate: (id: string, data: { content?: string; color?: StickyNoteColor }) => {
+          const parsed = parseNodeId(id);
+          if (parsed) updateStickyNote(today, parsed.id, data);
+        },
       },
       style: { width: 150, height: 150 },
     };
     setNodes((nds) => [...nds, newNode]);
-  }, [getViewportCenter, setNodes]);
+  }, [getViewportCenter, today, addStickyNote, deleteStickyNote, updateStickyNote, setNodes]);
 
   // Add a new link card
   const handleAddLink = useCallback(
     (url: string, title: string) => {
       const center = getViewportCenter();
+      const linkId = generateId();
+
+      // Add to store first
+      addLinkCard(today, {
+        url,
+        title,
+        position: { x: center.x - 90, y: center.y - 40 },
+      });
+
+      // Add to React Flow nodes
       const newNode: Node = {
-        id: `link-${generateId()}`,
+        id: `link-${linkId}`,
         type: "linkCard",
         position: { x: center.x - 90, y: center.y - 40 },
         data: {
           url,
           title,
+          onDelete: (id: string) => {
+            const parsed = parseNodeId(id);
+            if (parsed) deleteLinkCard(today, parsed.id);
+          },
         },
       };
       setNodes((nds) => [...nds, newNode]);
     },
-    [getViewportCenter, setNodes]
+    [getViewportCenter, today, addLinkCard, deleteLinkCard, setNodes]
   );
 
   // Only render on client
@@ -353,8 +293,6 @@ function WhiteboardContent() {
       </div>
     );
   }
-
-  const today = getTodayDateString();
 
   return (
     <div className="flex-1 flex flex-col h-[calc(100vh-56px)]">
@@ -416,7 +354,7 @@ function WhiteboardContent() {
           edges={edges}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
-          onNodesChange={onNodesChange}
+          onNodesChange={handleNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           fitView
@@ -475,6 +413,18 @@ function WhiteboardContent() {
             <span>Add Link</span>
           </button>
         </div>
+
+        {/* Empty state */}
+        {nodes.length === 0 && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+            <div className="text-center">
+              <p className="text-text-secondary text-lg mb-2">No missions for today</p>
+              <p className="text-text-disabled text-sm">
+                Add missions in the Today View to see them here
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Add Link Modal */}
