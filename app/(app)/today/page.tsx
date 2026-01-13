@@ -1,27 +1,22 @@
 "use client";
 
-import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useMereoStore, useCurrentSession, useMissionsByDate } from "@/lib/store";
+import { useRequireSession } from "@/lib/hooks";
 import { getTodayDateString, formatTimeDisplay } from "@/lib/utils";
 
-export default function TodayPlaceholder() {
+export default function TodayPage() {
   const router = useRouter();
+  const { isLoading, hasSession } = useRequireSession();
   const today = getTodayDateString();
   const currentSession = useCurrentSession();
   const todayMissions = useMissionsByDate(today);
   const { endDaySession } = useMereoStore();
 
-  // Redirect to login if no active session
-  useEffect(() => {
-    if (!currentSession?.isActive) {
-      router.push("/");
-    }
-  }, [currentSession, router]);
-
-  if (!currentSession?.isActive) {
+  // Show loading spinner while checking session
+  if (isLoading || !hasSession) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex-1 flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -34,15 +29,17 @@ export default function TodayPlaceholder() {
   };
 
   return (
-    <div className="min-h-screen p-8">
+    <div className="p-8">
       {/* Header */}
       <header className="flex items-center justify-between mb-12">
         <div>
           <h1 className="text-3xl font-semibold mb-1">Today View</h1>
-          <p className="text-text-secondary">
-            Session started at {formatTimeDisplay(new Date(currentSession.startTime))} |
-            Ends at {formatTimeDisplay(new Date(currentSession.endTime))}
-          </p>
+          {currentSession && (
+            <p className="text-text-secondary">
+              Session started at {formatTimeDisplay(new Date(currentSession.startTime))} |
+              Ends at {formatTimeDisplay(new Date(currentSession.endTime))}
+            </p>
+          )}
         </div>
         <button
           onClick={handleEndDay}
@@ -70,38 +67,31 @@ export default function TodayPlaceholder() {
         {/* Quick Mission List */}
         <h3 className="text-lg font-semibold mb-4 text-text-secondary">Today's Missions</h3>
         <div className="space-y-3">
-          {todayMissions.map((mission) => (
-            <div
-              key={mission.id}
-              className="bg-surface rounded-lg p-4 border-l-4"
-              style={{ borderColor: mission.status === "active" ? "#3B82F6" : "#2A2A2A" }}
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className={`text-xs uppercase tracking-wide ${
-                    mission.status === "active" ? "text-accent" : "text-text-disabled"
-                  }`}>
-                    {mission.status}
+          {todayMissions.length === 0 ? (
+            <p className="text-text-disabled">No missions scheduled for today.</p>
+          ) : (
+            todayMissions.map((mission) => (
+              <div
+                key={mission.id}
+                className="bg-surface rounded-lg p-4 border-l-4"
+                style={{ borderColor: mission.status === "active" ? "#3B82F6" : "#2A2A2A" }}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className={`text-xs uppercase tracking-wide ${
+                      mission.status === "active" ? "text-accent" : "text-text-disabled"
+                    }`}>
+                      {mission.status}
+                    </span>
+                    <h4 className="font-medium">{mission.title}</h4>
+                  </div>
+                  <span className="text-text-secondary text-sm">
+                    {mission.checkpoints.filter(cp => cp.isComplete).length}/{mission.checkpoints.length} done
                   </span>
-                  <h4 className="font-medium">{mission.title}</h4>
                 </div>
-                <span className="text-text-secondary text-sm">
-                  {mission.checkpoints.filter(cp => cp.isComplete).length}/{mission.checkpoints.length} done
-                </span>
               </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Navigation Links */}
-        <div className="mt-12 flex gap-4 text-sm text-text-disabled">
-          <a href="/" className="hover:text-text-secondary transition-colors">
-            &larr; Back to Login
-          </a>
-          <span>|</span>
-          <a href="/store-test" className="hover:text-text-secondary transition-colors">
-            Store Test
-          </a>
+            ))
+          )}
         </div>
       </div>
     </div>
