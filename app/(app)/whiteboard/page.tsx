@@ -25,6 +25,8 @@ import {
   CheckpointNode,
   StickyNode,
   LinkNode,
+  MissionEdge,
+  CheckpointEdge,
 } from "@/components/whiteboard";
 
 // Register custom node types
@@ -33,6 +35,12 @@ const nodeTypes = {
   checkpoint: CheckpointNode,
   sticky: StickyNode,
   link: LinkNode,
+};
+
+// Register custom edge types
+const edgeTypes = {
+  mission: MissionEdge,
+  checkpoint: CheckpointEdge,
 };
 
 // Sample hardcoded nodes for testing
@@ -162,49 +170,58 @@ const initialNodes: Node[] = [
 ];
 
 const initialEdges: Edge[] = [
-  // Mission 1 to its checkpoints
+  // Mission 1 to its checkpoints (using checkpoint edge type)
   {
     id: "e-m1-cp1",
     source: "mission-1",
     sourceHandle: "checkpoint-out-left",
     target: "checkpoint-1-1",
-    type: "smoothstep",
-    style: { stroke: "#3B82F6", strokeWidth: 2 },
+    type: "checkpoint",
+    data: { isComplete: true, parentMissionActive: true },
   },
   {
     id: "e-m1-cp2",
     source: "mission-1",
     sourceHandle: "checkpoint-out-right",
     target: "checkpoint-1-2",
-    type: "smoothstep",
-    style: { stroke: "#3B82F6", strokeWidth: 2 },
+    type: "checkpoint",
+    data: { isComplete: false, parentMissionActive: true },
   },
   {
     id: "e-cp1-cp3",
     source: "checkpoint-1-1",
     target: "checkpoint-1-3",
-    type: "smoothstep",
-    style: { stroke: "#3B82F6", strokeWidth: 1.5 },
+    type: "checkpoint",
+    data: { isComplete: false, parentMissionActive: true },
   },
-  // Mission 1 to Mission 2 (flow)
+  // Mission 1 to Mission 2 (using mission edge type - active)
   {
     id: "e-m1-m2",
     source: "mission-1",
     sourceHandle: "mission-out",
     target: "mission-2",
-    type: "smoothstep",
-    style: { stroke: "#6B7280", strokeWidth: 2, strokeDasharray: "5,5" },
+    type: "mission",
+    data: { sourceStatus: "active", targetStatus: "scheduled" },
   },
-  // Mission 2 to Mission 3
+  // Mission 2 to Mission 3 (scheduled to completed)
   {
     id: "e-m2-m3",
     source: "mission-2",
     sourceHandle: "mission-out",
     target: "mission-3",
-    type: "smoothstep",
-    style: { stroke: "#6B7280", strokeWidth: 2, strokeDasharray: "5,5" },
+    type: "mission",
+    data: { sourceStatus: "scheduled", targetStatus: "completed" },
   },
-  // Mission 4 to sticky (reference)
+  // Mission 3 to Mission 4 (completed edge)
+  {
+    id: "e-m3-m4",
+    source: "mission-3",
+    sourceHandle: "mission-out",
+    target: "mission-4",
+    type: "mission",
+    data: { sourceStatus: "completed", targetStatus: "bottleneck" },
+  },
+  // Mission 4 to sticky (reference - bottleneck)
   {
     id: "e-m4-sticky",
     source: "mission-4",
@@ -345,6 +362,7 @@ export default function WhiteboardPage() {
           nodes={nodes}
           edges={edges}
           nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
