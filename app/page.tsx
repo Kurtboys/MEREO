@@ -299,8 +299,7 @@ function EndTimePickerModal({
           <div className="text-center mb-8">
             <span className="text-text-secondary text-sm">Your day ends at </span>
             <span className="font-mono text-accent">
-              {formatHour(selectedHour).replace(" ", ":")}
-              {selectedMinute.toString().padStart(2, "0")}
+              {(selectedHour % 12 || 12)}:{selectedMinute.toString().padStart(2, "0")}
               {selectedHour >= 12 ? " PM" : " AM"}
             </span>
           </div>
