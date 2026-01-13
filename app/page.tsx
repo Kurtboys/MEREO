@@ -4,11 +4,12 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { format, addHours, setHours, setMinutes } from "date-fns";
-import { useMereoStore } from "@/lib/store";
+import { useMereoStore, useStoreHydration } from "@/lib/store";
 import { getTodayDateString } from "@/lib/utils";
 
 export default function LoginPage() {
   const router = useRouter();
+  const hydrated = useStoreHydration();
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { missions, currentSession, startDaySession, loadSeedData } = useMereoStore();
@@ -40,10 +41,11 @@ export default function LoginPage() {
 
   // If already logged in for today, redirect to /today
   useEffect(() => {
+    if (!hydrated) return;
     if (currentSession?.isActive && currentSession.date === getTodayDateString()) {
       router.push("/today");
     }
-  }, [currentSession, router]);
+  }, [currentSession, router, hydrated]);
 
   const handleLoginClick = () => {
     setIsModalOpen(true);
@@ -59,7 +61,7 @@ export default function LoginPage() {
   );
 
   // Show loading state until client hydrates
-  if (!currentTime) {
+  if (!currentTime || !hydrated) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />

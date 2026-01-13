@@ -5,6 +5,7 @@
 
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { useEffect, useState } from "react";
 import type {
   Tag,
   Mission,
@@ -916,9 +917,38 @@ export const useMereoStore = create<MereoStore>()(
         currentSession: state.currentSession,
         whiteboards: state.whiteboards,
       }),
+      skipHydration: true,
     }
   )
 );
+
+// ============================================
+// Hydration Hook for SSR
+// ============================================
+
+export function useStoreHydration() {
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    // Manually trigger hydration on client
+    useMereoStore.persist.rehydrate();
+
+    const unsubFinishHydration = useMereoStore.persist.onFinishHydration(() => {
+      setHydrated(true);
+    });
+
+    // Check if already hydrated
+    if (useMereoStore.persist.hasHydrated()) {
+      setHydrated(true);
+    }
+
+    return () => {
+      unsubFinishHydration();
+    };
+  }, []);
+
+  return hydrated;
+}
 
 // ============================================
 // Selector Hooks for Performance

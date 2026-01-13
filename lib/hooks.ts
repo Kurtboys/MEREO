@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useCurrentSession } from "./store";
+import { useCurrentSession, useStoreHydration } from "./store";
 import { getTodayDateString } from "./utils";
 
 /**
@@ -14,20 +14,11 @@ import { getTodayDateString } from "./utils";
  */
 export function useRequireSession(redirectTo: string = "/") {
   const router = useRouter();
+  const hydrated = useStoreHydration();
   const currentSession = useCurrentSession();
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Wait for store to hydrate
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
-    if (isLoading) return;
+    if (!hydrated) return;
 
     const hasValidSession =
       currentSession?.isActive && currentSession.date === getTodayDateString();
@@ -35,14 +26,14 @@ export function useRequireSession(redirectTo: string = "/") {
     if (!hasValidSession) {
       router.push(redirectTo);
     }
-  }, [currentSession, isLoading, redirectTo, router]);
+  }, [currentSession, hydrated, redirectTo, router]);
 
   const hasValidSession =
     currentSession?.isActive && currentSession.date === getTodayDateString();
 
   return {
-    isLoading,
-    hasSession: hasValidSession,
+    isLoading: !hydrated,
+    hasSession: hydrated && hasValidSession,
   };
 }
 
@@ -53,20 +44,16 @@ export function useRequireSession(redirectTo: string = "/") {
  * @returns { isLoading, hasSession, session }
  */
 export function useSessionStatus() {
+  const hydrated = useStoreHydration();
   const currentSession = useCurrentSession();
-  const [isHydrated, setIsHydrated] = useState(false);
-
-  useEffect(() => {
-    setIsHydrated(true);
-  }, []);
 
   const hasValidSession =
     currentSession?.isActive && currentSession.date === getTodayDateString();
 
   return {
-    isHydrated,
-    hasSession: hasValidSession,
-    session: currentSession,
+    isHydrated: hydrated,
+    hasSession: hydrated && hasValidSession,
+    session: hydrated ? currentSession : null,
   };
 }
 
