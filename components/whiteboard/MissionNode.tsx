@@ -18,6 +18,8 @@ export interface MissionNodeData extends Record<string, unknown> {
   totalMinutes?: number;
   checkpointCount?: number;
   completedCheckpoints?: number;
+  // Animation triggers
+  triggerUnlock?: boolean;
 }
 
 type MissionNodeType = Node<MissionNodeData, "mission">;
@@ -33,6 +35,17 @@ function MissionNodeComponent({ data, selected }: NodeProps<MissionNodeType>) {
 
   // Timer state for active mission
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  // Unlock animation state
+  const [showUnlockAnimation, setShowUnlockAnimation] = useState(false);
+
+  // Trigger unlock animation when prop changes
+  useEffect(() => {
+    if (data.triggerUnlock) {
+      setShowUnlockAnimation(true);
+      const timer = setTimeout(() => setShowUnlockAnimation(false), 600);
+      return () => clearTimeout(timer);
+    }
+  }, [data.triggerUnlock]);
 
   // Get mission from store
   const mission = data.missionId ? getMissionById(data.missionId) : null;
@@ -122,9 +135,16 @@ function MissionNodeComponent({ data, selected }: NodeProps<MissionNodeType>) {
       <motion.div
         initial={false}
         animate={{
-          boxShadow: isActive
+          boxShadow: showUnlockAnimation
+            ? `0 0 30px ${tagData.color}80, 0 0 60px ${tagData.color}40`
+            : isActive
             ? `0 0 20px ${tagData.color}40, 0 0 40px ${tagData.color}20`
             : "none",
+          scale: showUnlockAnimation ? 1.02 : 1,
+        }}
+        transition={{
+          boxShadow: { duration: 0.3 },
+          scale: { duration: 0.3, ease: "easeOut" },
         }}
         className={cn(
           "w-[220px] rounded-lg overflow-hidden transition-all",
@@ -182,10 +202,25 @@ function MissionNodeComponent({ data, selected }: NodeProps<MissionNodeType>) {
               </span>
             )}
             {isLocked && (
-              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-text-disabled">
-                <Lock className="w-3 h-3" />
+              <motion.span
+                initial={false}
+                animate={{
+                  opacity: showUnlockAnimation ? 0 : 1,
+                }}
+                transition={{ duration: 0.3 }}
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-text-disabled"
+              >
+                <motion.div
+                  animate={{
+                    scale: showUnlockAnimation ? 0.5 : 1,
+                    rotate: showUnlockAnimation ? 45 : 0,
+                  }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Lock className="w-3 h-3" />
+                </motion.div>
                 Locked
-              </span>
+              </motion.span>
             )}
             {isComplete && (
               <span className="inline-flex items-center gap-1.5 text-xs font-medium text-status-complete">
