@@ -42,6 +42,7 @@ export interface MereoStore {
   getMissionById: (id: string) => Mission | undefined;
   getTagById: (id: string) => Tag | undefined;
   getActiveMission: () => Mission | undefined;
+  getNextScheduledMission: (date: string) => Mission | undefined;
 
   // Tag Actions
   addTag: (tag: Omit<Tag, "id" | "createdAt">) => Tag;
@@ -132,6 +133,12 @@ export const useMereoStore = create<MereoStore>()(
 
       getActiveMission: () => {
         return get().missions.find((m) => m.status === "active");
+      },
+
+      getNextScheduledMission: (date: string) => {
+        return get()
+          .missions.filter((m) => m.scheduledDate === date && m.status === "scheduled")
+          .sort((a, b) => a.order - b.order)[0];
       },
 
       // ========================================
@@ -419,12 +426,9 @@ export const useMereoStore = create<MereoStore>()(
           }),
         }));
 
-        // Activate next mission in sequence
-        const todayMissions = get().getMissionsByDate(mission.scheduledDate);
-        const currentIndex = todayMissions.findIndex((m) => m.id === missionId);
-        const nextMission = todayMissions[currentIndex + 1];
-
-        if (nextMission && nextMission.status === "scheduled") {
+        // Auto-advance: Find next scheduled mission (not just next in index)
+        const nextMission = get().getNextScheduledMission(mission.scheduledDate);
+        if (nextMission) {
           get().setMissionActive(nextMission.id);
         }
       },
@@ -433,6 +437,10 @@ export const useMereoStore = create<MereoStore>()(
         const mission = get().getMissionById(missionId);
         if (!mission) return;
 
+        // Get max order for today's missions to move bottlenecked mission to bottom
+        const todayMissions = get().getMissionsByDate(mission.scheduledDate);
+        const maxOrder = Math.max(...todayMissions.map((m) => m.order), 0);
+
         set((state) => ({
           missions: state.missions.map((m) => {
             if (m.id === missionId) {
@@ -440,18 +448,16 @@ export const useMereoStore = create<MereoStore>()(
                 ...m,
                 status: "bottleneck" as const,
                 bottleneckReason: reason,
+                order: maxOrder + 1, // Move to bottom
               };
             }
             return m;
           }),
         }));
 
-        // Activate next mission
-        const todayMissions = get().getMissionsByDate(mission.scheduledDate);
-        const currentIndex = todayMissions.findIndex((m) => m.id === missionId);
-        const nextMission = todayMissions[currentIndex + 1];
-
-        if (nextMission && nextMission.status === "scheduled") {
+        // Auto-advance: Find next scheduled mission
+        const nextMission = get().getNextScheduledMission(mission.scheduledDate);
+        if (nextMission) {
           get().setMissionActive(nextMission.id);
         }
       },
