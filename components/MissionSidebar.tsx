@@ -84,12 +84,12 @@ export function MissionSidebar() {
       {/* Header */}
       <div className="p-4 border-b border-border-subtle">
         {/* Date */}
-        <h2 className="text-lg font-semibold mb-1">
+        <h2 className="text-lg font-black mb-1">
           {format(new Date(), "EEEE, MMM d")}
         </h2>
 
         {/* Time range */}
-        <p className="text-sm text-text-secondary mb-3">
+        <p className="text-sm text-text-secondary font-mono font-light mb-3">
           {formatSessionTime(currentSession.startTime)} -{" "}
           {formatSessionTime(currentSession.endTime)}
         </p>

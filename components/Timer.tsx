@@ -73,7 +73,7 @@ export function Timer({ startedAt, totalMinutes, className }: TimerProps) {
     <div className={cn("text-center", className)}>
       <div
         className={cn(
-          "font-mono text-[56px] leading-none font-medium tracking-tight transition-colors",
+          "font-mono text-[56px] leading-none font-light tracking-tight transition-colors",
           isOvertime
             ? "text-status-warning"
             : isWarning

@@ -149,14 +149,14 @@ function ActiveBlock({
       )}
 
       {/* Title */}
-      <h3 className="font-semibold text-text-primary mb-2">{title}</h3>
+      <h3 className="font-black text-text-primary mb-2">{title}</h3>
 
       {/* Progress */}
       <div className="flex items-center justify-between text-sm">
         <span className="text-text-secondary">
           {checkpointsCompleted}/{totalCheckpoints} done
         </span>
-        <span className="text-text-secondary font-mono">
+        <span className="text-text-secondary font-mono font-light">
           {formatTime(totalMinutes)}
         </span>
       </div>
@@ -205,7 +205,7 @@ function UpcomingBlock({
           <p className="text-sm text-text-secondary">
             {tagName || "Untagged"}
           </p>
-          <p className="text-xs text-text-disabled font-mono mt-1">
+          <p className="text-xs text-text-disabled font-mono font-light mt-1">
             {formatTime(totalMinutes)}
           </p>
         </div>
@@ -227,7 +227,7 @@ function BottleneckBlock() {
 
       {/* Large rotated text */}
       <div className="flex items-center justify-center h-16">
-        <span className="text-status-bottleneck font-bold text-lg tracking-widest uppercase">
+        <span className="text-status-bottleneck font-black text-lg tracking-widest uppercase">
           BOTTLENECK
         </span>
       </div>

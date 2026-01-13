@@ -145,7 +145,7 @@ export function MissionFocus() {
               <div className="w-20 h-20 rounded-full bg-status-success/20 flex items-center justify-center mx-auto mb-6">
                 <Check className="w-10 h-10 text-status-success" />
               </div>
-              <h2 className="text-3xl font-semibold mb-3">All Done!</h2>
+              <h2 className="text-3xl font-black mb-3">All Done!</h2>
               <p className="text-text-secondary text-lg">
                 You&apos;ve completed all your missions for today.
               </p>
@@ -160,7 +160,7 @@ export function MissionFocus() {
               <div className="w-20 h-20 rounded-full bg-status-bottleneck/20 flex items-center justify-center mx-auto mb-6">
                 <Clock className="w-10 h-10 text-status-bottleneck" />
               </div>
-              <h2 className="text-3xl font-semibold mb-3 text-status-bottleneck">All Blocked</h2>
+              <h2 className="text-3xl font-black mb-3 text-status-bottleneck">All Blocked</h2>
               <p className="text-text-secondary text-lg">
                 All {todayMissions.length} mission{todayMissions.length !== 1 ? "s" : ""} hit bottlenecks.
                 <br />
@@ -177,7 +177,7 @@ export function MissionFocus() {
               <div className="w-20 h-20 rounded-full bg-status-success/20 flex items-center justify-center mx-auto mb-6">
                 <Check className="w-10 h-10 text-status-success" />
               </div>
-              <h2 className="text-3xl font-semibold mb-3">Day Complete</h2>
+              <h2 className="text-3xl font-black mb-3">Day Complete</h2>
               <p className="text-text-secondary text-lg">
                 {todayMissions.filter((m) => m.status === "completed").length} completed, {todayMissions.filter((m) => m.status === "bottleneck").length} bottlenecked.
               </p>
@@ -192,7 +192,7 @@ export function MissionFocus() {
               <div className="w-20 h-20 rounded-full bg-accent/20 flex items-center justify-center mx-auto mb-6">
                 <Play className="w-10 h-10 text-accent ml-1" />
               </div>
-              <h2 className="text-3xl font-semibold mb-3">Ready to Start</h2>
+              <h2 className="text-3xl font-black mb-3">Ready to Start</h2>
               <p className="text-text-secondary text-lg mb-8">
                 You have {todayMissions.filter((m) => m.status === "scheduled").length} mission
                 {todayMissions.filter((m) => m.status === "scheduled").length !== 1 ? "s" : ""} scheduled.
@@ -213,7 +213,7 @@ export function MissionFocus() {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.3 }}
             >
-              <h2 className="text-2xl font-semibold mb-3 text-text-secondary">
+              <h2 className="text-2xl font-black mb-3 text-text-secondary">
                 No Missions Scheduled
               </h2>
               <p className="text-text-disabled">
@@ -243,7 +243,7 @@ export function MissionFocus() {
       {/* Mission Info */}
       <div className="text-center mb-10">
         <div className="flex items-center justify-center gap-3 mb-3">
-          <h1 className="text-[28px] font-semibold">{activeMission.title}</h1>
+          <h1 className="text-[28px] font-black">{activeMission.title}</h1>
           {activeTag && (
             <span
               className="px-3 py-1 rounded-full text-sm font-medium"
@@ -345,7 +345,7 @@ export function MissionFocus() {
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.2 }}
-                className="text-3xl font-bold text-status-success mb-2"
+                className="text-3xl font-black text-status-success mb-2"
               >
                 Mission Complete!
               </motion.h2>
@@ -432,7 +432,7 @@ function CheckpointItem({
       </div>
 
       {/* Time Estimate */}
-      <span className="text-sm text-text-disabled font-mono">
+      <span className="text-sm text-text-disabled font-mono font-light">
         {checkpoint.estimatedMinutes} min
       </span>
     </motion.div>

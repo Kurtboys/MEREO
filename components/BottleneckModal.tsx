@@ -86,7 +86,7 @@ export function BottleneckModal({
                       <AlertTriangle className="w-6 h-6 text-status-bottleneck" />
                     </div>
                     <div>
-                      <h2 className="text-xl font-semibold">
+                      <h2 className="text-xl font-black">
                         What&apos;s blocking this mission?
                       </h2>
                       <p className="text-sm text-text-secondary mt-0.5">

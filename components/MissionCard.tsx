@@ -185,11 +185,11 @@ export function MissionCard({
                     defaultValue={mission.title}
                     onBlur={(e) => handleTitleSave(e.target.value)}
                     onKeyDown={handleTitleKeyDown}
-                    className="flex-1 text-lg font-semibold bg-void border border-accent rounded px-2 py-1 focus:outline-none"
+                    className="flex-1 text-lg font-black bg-void border border-accent rounded px-2 py-1 focus:outline-none"
                   />
                 ) : (
                   <h3
-                    className="text-lg font-semibold truncate cursor-pointer hover:text-accent transition-colors"
+                    className="text-lg font-black truncate cursor-pointer hover:text-accent transition-colors"
                     onClick={() => setEditingTitle(true)}
                   >
                     {mission.title}
@@ -211,7 +211,7 @@ export function MissionCard({
 
               {/* Meta Row */}
               <div className="flex items-center gap-4 text-sm text-text-secondary">
-                <span className="font-mono">{mission.totalEstimatedMinutes} min</span>
+                <span className="font-mono font-light">{mission.totalEstimatedMinutes} min</span>
                 <span>{mission.checkpoints.length} checkpoints</span>
                 {mission.status !== "scheduled" && (
                   <span
@@ -520,11 +520,11 @@ function CheckpointRow({
           defaultValue={checkpoint.estimatedMinutes}
           onBlur={(e) => onSaveTime(e.target.value)}
           onKeyDown={handleTimeKeyDown}
-          className="w-16 text-sm text-right bg-void border border-accent rounded px-2 py-1 focus:outline-none font-mono"
+          className="w-16 text-sm text-right bg-void border border-accent rounded px-2 py-1 focus:outline-none font-mono font-light"
         />
       ) : (
         <span
-          className="text-sm text-text-disabled font-mono cursor-pointer hover:text-accent transition-colors"
+          className="text-sm text-text-disabled font-mono font-light cursor-pointer hover:text-accent transition-colors"
           onClick={onEditTime}
         >
           {checkpoint.estimatedMinutes}m

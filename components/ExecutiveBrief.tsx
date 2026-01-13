@@ -208,11 +208,11 @@ export function ExecutiveBrief({ isOpen, onClose, onConfirm }: ExecutiveBriefPro
                   <Moon className="w-7 h-7 text-accent" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold">Day Complete</h2>
+                  <h2 className="text-2xl font-black">Day Complete</h2>
                   <p className="text-text-secondary">
                     {format(parseDateString(currentSession.date), "EEEE, MMMM d, yyyy")}
                   </p>
-                  <p className="text-sm text-text-disabled">
+                  <p className="text-sm text-text-disabled font-mono font-light">
                     {formatTime(currentSession.startTime)} - {formatTime(currentSession.endTime)}
                   </p>
                 </div>
@@ -235,7 +235,7 @@ export function ExecutiveBrief({ isOpen, onClose, onConfirm }: ExecutiveBriefPro
                   <div className="w-6 h-6 rounded-full bg-status-success/20 flex items-center justify-center">
                     <Check className="w-4 h-4 text-status-success" />
                   </div>
-                  <h3 className="font-semibold text-status-success">
+                  <h3 className="font-black text-status-success">
                     Completed Missions ({completedDetails.length})
                   </h3>
                 </div>
@@ -268,7 +268,7 @@ export function ExecutiveBrief({ isOpen, onClose, onConfirm }: ExecutiveBriefPro
                           {mission.title}
                         </span>
                         <span
-                          className={`text-sm font-mono ${
+                          className={`text-sm font-mono font-light ${
                             wasUnderEstimate
                               ? "text-status-success"
                               : wasOverEstimate
@@ -295,7 +295,7 @@ export function ExecutiveBrief({ isOpen, onClose, onConfirm }: ExecutiveBriefPro
                   <div className="w-6 h-6 rounded-full bg-status-bottleneck/20 flex items-center justify-center">
                     <AlertTriangle className="w-4 h-4 text-status-bottleneck" />
                   </div>
-                  <h3 className="font-semibold text-status-bottleneck">
+                  <h3 className="font-black text-status-bottleneck">
                     Bottlenecked ({bottleneckDetails.length})
                   </h3>
                 </div>
@@ -343,7 +343,7 @@ export function ExecutiveBrief({ isOpen, onClose, onConfirm }: ExecutiveBriefPro
                   <div className="w-6 h-6 rounded-full bg-text-disabled/20 flex items-center justify-center">
                     <ArrowRight className="w-4 h-4 text-text-disabled" />
                   </div>
-                  <h3 className="font-semibold text-text-secondary">
+                  <h3 className="font-black text-text-secondary">
                     Incomplete ({incompleteDetails.length})
                   </h3>
                 </div>
@@ -383,7 +383,7 @@ export function ExecutiveBrief({ isOpen, onClose, onConfirm }: ExecutiveBriefPro
                 <div className="w-6 h-6 rounded-full bg-accent/20 flex items-center justify-center">
                   <Clock className="w-4 h-4 text-accent" />
                 </div>
-                <h3 className="font-semibold">Time Summary</h3>
+                <h3 className="font-black">Time Summary</h3>
               </div>
 
               {/* Total active time */}
@@ -391,7 +391,7 @@ export function ExecutiveBrief({ isOpen, onClose, onConfirm }: ExecutiveBriefPro
                 <span className="text-text-primary font-medium">
                   Total Active Time
                 </span>
-                <span className="text-xl font-bold text-accent">
+                <span className="text-xl font-mono font-light text-accent">
                   {formatDuration(briefData.totalActiveMinutes)}
                 </span>
               </div>
@@ -419,7 +419,7 @@ export function ExecutiveBrief({ isOpen, onClose, onConfirm }: ExecutiveBriefPro
                         >
                           {tag.name}
                         </span>
-                        <span className="font-mono text-text-secondary">
+                        <span className="font-mono font-light text-text-secondary">
                           {formatDuration(minutes)}
                         </span>
                       </div>

@@ -37,7 +37,7 @@ export function AppNav() {
         {/* Logo */}
         <Link
           href={logoHref}
-          className="text-xl font-semibold tracking-tight hover:text-accent transition-all duration-200"
+          className="text-xl font-black tracking-tight hover:text-accent transition-all duration-200"
         >
           MEREO
         </Link>
