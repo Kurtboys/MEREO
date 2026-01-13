@@ -310,7 +310,7 @@ export default function SchedulerPage() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 px-6 py-3 bg-accent hover:bg-accent-hover text-void font-semibold rounded-xl transition-colors"
+            className="flex items-center gap-2 px-6 py-3 bg-accent hover:bg-[#2563EB] text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-accent/20"
           >
             <Plus className="w-5 h-5" />
             Create Mission
@@ -347,7 +347,7 @@ export default function SchedulerPage() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-2 px-6 py-3 bg-accent hover:bg-accent-hover text-void font-semibold rounded-xl transition-colors mt-4"
+              className="flex items-center gap-2 px-6 py-3 bg-accent hover:bg-[#2563EB] text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-accent/20 mt-4"
             >
               <Plus className="w-5 h-5" />
               Create your first mission

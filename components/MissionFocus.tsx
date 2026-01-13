@@ -293,7 +293,7 @@ export function MissionFocus() {
         ) : (
           <button
             onClick={handleCompleteMission}
-            className="px-8 py-3 border border-border-subtle text-text-secondary hover:text-text-primary hover:border-text-secondary rounded-xl transition-colors"
+            className="px-8 py-3 border border-border-subtle text-text-secondary hover:text-text-primary hover:bg-surface-hover hover:border-text-secondary rounded-xl transition-all duration-200"
           >
             Complete Anyway
           </button>
@@ -301,7 +301,7 @@ export function MissionFocus() {
 
         <button
           onClick={() => setShowBottleneckModal(true)}
-          className="px-6 py-3 border border-status-bottleneck/50 text-status-bottleneck hover:bg-status-bottleneck/10 rounded-xl transition-colors flex items-center gap-2"
+          className="px-6 py-3 border border-status-bottleneck/50 text-status-bottleneck hover:bg-status-bottleneck/20 hover:border-status-bottleneck rounded-xl transition-all duration-200 flex items-center gap-2"
         >
           <AlertTriangle className="w-5 h-5" />
           Bottleneck

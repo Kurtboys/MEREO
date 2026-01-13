@@ -78,7 +78,7 @@ function CompletedBlock({
 }) {
   return (
     <div
-      className="relative rounded-lg bg-surface/50 p-4 border-l-4 opacity-60"
+      className="relative rounded-lg bg-surface/50 p-4 border-l-4 opacity-60 hover:opacity-80 transition-all duration-200 cursor-pointer"
       style={{ borderColor: tagColor || "#2A2A2A" }}
     >
       {/* Checkmark overlay */}
@@ -181,7 +181,7 @@ function UpcomingBlock({
   return (
     <div
       className={cn(
-        "relative rounded-lg bg-surface p-4 border-l-4",
+        "relative rounded-lg bg-surface p-4 border-l-4 hover:bg-surface-hover transition-all duration-200 cursor-pointer",
         isDraggable && "cursor-grab active:cursor-grabbing"
       )}
       style={{ borderColor: tagColor || "#2A2A2A" }}

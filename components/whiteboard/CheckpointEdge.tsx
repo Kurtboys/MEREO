@@ -48,7 +48,7 @@ function CheckpointEdgeComponent({
     }
     if (parentMissionActive) {
       return {
-        stroke: "#6B7280",
+        stroke: "#525252",
         strokeWidth: 1.5,
         strokeOpacity: 0.8,
       };

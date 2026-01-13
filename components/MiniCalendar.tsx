@@ -114,14 +114,14 @@ export function MiniCalendar({
               key={day.toISOString()}
               onClick={() => onSelectDate(day)}
               className={cn(
-                "aspect-square rounded-lg flex flex-col items-center justify-center text-sm transition-all relative",
+                "aspect-square flex flex-col items-center justify-center text-sm transition-all duration-200 relative",
                 isSelected
-                  ? "bg-accent text-void font-semibold"
+                  ? "bg-accent text-white font-semibold rounded-full shadow-md shadow-accent/30"
                   : isTodayDate
-                    ? "ring-2 ring-accent ring-inset text-accent font-medium hover:bg-surface-hover"
+                    ? "ring-2 ring-accent ring-inset text-accent font-medium hover:bg-surface-hover rounded-lg"
                     : isCurrentMonth
-                      ? "hover:bg-surface-hover text-text-primary"
-                      : "text-text-disabled hover:bg-surface"
+                      ? "hover:bg-surface-hover text-text-primary rounded-lg"
+                      : "text-text-disabled hover:bg-surface rounded-lg"
               )}
             >
               {format(day, "d")}
