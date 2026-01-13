@@ -8,12 +8,14 @@ import {
   ChevronDown,
   Plus,
   Filter,
+  Settings,
 } from "lucide-react";
 import { useMereoStore } from "@/lib/store";
 import { formatDateKey, cn } from "@/lib/utils";
 import { MiniCalendar } from "@/components/MiniCalendar";
 import { MissionCard } from "@/components/MissionCard";
 import { CreateMissionModal } from "@/components/CreateMissionModal";
+import { TagManager } from "@/components/TagManager";
 
 export default function SchedulerPage() {
   const [isClient, setIsClient] = useState(false);
@@ -21,6 +23,7 @@ export default function SchedulerPage() {
   const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
   const [showTagDropdown, setShowTagDropdown] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showTagManager, setShowTagManager] = useState(false);
   const [draggedMissionId, setDraggedMissionId] = useState<string | null>(null);
   const [dragOverMissionId, setDragOverMissionId] = useState<string | null>(null);
 
@@ -231,9 +234,18 @@ export default function SchedulerPage() {
 
         {/* Tags Overview at bottom */}
         <div className="mt-auto pt-6">
-          <p className="text-xs text-text-disabled uppercase tracking-wide mb-3">
-            Your Tags
-          </p>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs text-text-disabled uppercase tracking-wide">
+              Your Tags
+            </p>
+            <button
+              onClick={() => setShowTagManager(true)}
+              className="flex items-center gap-1 text-xs text-accent hover:text-accent-hover transition-colors"
+            >
+              <Settings className="w-3 h-3" />
+              Manage
+            </button>
+          </div>
           {tags.length === 0 ? (
             <p className="text-text-disabled text-sm">No tags created</p>
           ) : (
@@ -385,6 +397,16 @@ export default function SchedulerPage() {
             isOpen={showCreateModal}
             onClose={() => setShowCreateModal(false)}
             initialDate={selectedDate}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Tag Manager Modal */}
+      <AnimatePresence>
+        {showTagManager && (
+          <TagManager
+            isOpen={showTagManager}
+            onClose={() => setShowTagManager(false)}
           />
         )}
       </AnimatePresence>
