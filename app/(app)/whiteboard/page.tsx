@@ -20,7 +20,8 @@ import {
   BackgroundVariant,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { ArrowLeft, ChevronDown, Archive, StickyNote, Link2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowLeft, Eye, ArrowRight, StickyNote, Link2, Calendar } from "lucide-react";
 import { useMereoStore } from "@/lib/store";
 import { getTodayDateString, formatDateDisplay, cn, generateId } from "@/lib/utils";
 import { generateWhiteboardLayout, parseNodeId } from "@/lib/whiteboard-layout";
@@ -35,6 +36,7 @@ import {
   MissionEdge,
   CheckpointEdge,
   AddLinkModal,
+  ArchiveDropdown,
 } from "@/components/whiteboard";
 
 // Register custom node types
@@ -78,13 +80,16 @@ function WhiteboardContent() {
   const router = useRouter();
   const reactFlowInstance = useReactFlow();
   const [isClient, setIsClient] = useState(false);
-  const [showArchiveDropdown, setShowArchiveDropdown] = useState(false);
   const [showAddLinkModal, setShowAddLinkModal] = useState(false);
+
+  // Date viewing state
+  const today = getTodayDateString();
+  const [viewingDate, setViewingDate] = useState(today);
+  const isReadOnly = viewingDate !== today;
 
   // Store state
   const {
     currentSession,
-    missions,
     tags,
     whiteboards,
     getMissionsByDate,
@@ -97,47 +102,66 @@ function WhiteboardContent() {
     deleteLinkCard,
   } = useMereoStore();
 
-  const today = getTodayDateString();
-  const todayMissions = useMemo(() => getMissionsByDate(today), [getMissionsByDate, today]);
-  const whiteboard = whiteboards[today] || null;
+  // Get missions for the viewing date
+  const viewingMissions = useMemo(
+    () => getMissionsByDate(viewingDate),
+    [getMissionsByDate, viewingDate]
+  );
+  const whiteboard = whiteboards[viewingDate] || null;
 
-  // Generate initial layout from store data
-  const { nodes: initialNodes, edges: initialEdges } = useMemo(() => {
+  // Get all whiteboard dates for archive dropdown
+  const whiteboardDates = useMemo(() => Object.keys(whiteboards), [whiteboards]);
+
+  // Generate layout from store data
+  const { nodes: generatedNodes, edges: generatedEdges } = useMemo(() => {
     if (!isClient) return { nodes: [], edges: [] };
-    return generateWhiteboardLayout(todayMissions, tags, whiteboard);
-  }, [isClient, todayMissions, tags, whiteboard]);
+    return generateWhiteboardLayout(viewingMissions, tags, whiteboard);
+  }, [isClient, viewingMissions, tags, whiteboard]);
 
   // React Flow state
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const [nodes, setNodes, onNodesChange] = useNodesState(generatedNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(generatedEdges);
 
-  // Update nodes when missions or whiteboard changes
+  // Update nodes when viewing date or data changes
   useEffect(() => {
-    if (isClient && todayMissions.length > 0) {
+    if (isClient) {
       const { nodes: newNodes, edges: newEdges } = generateWhiteboardLayout(
-        todayMissions,
+        viewingMissions,
         tags,
         whiteboard
       );
       setNodes(newNodes);
       setEdges(newEdges);
     }
-  }, [isClient, todayMissions, tags, whiteboard, setNodes, setEdges]);
+  }, [isClient, viewingMissions, tags, whiteboard, setNodes, setEdges]);
 
-  // Initialize whiteboard if it doesn't exist
+  // Initialize whiteboard for today if it doesn't exist
   useEffect(() => {
-    if (isClient && currentSession && !whiteboard && todayMissions.length > 0) {
+    const todayMissions = getMissionsByDate(today);
+    if (isClient && currentSession && !whiteboards[today] && todayMissions.length > 0) {
       initializeWhiteboard(today, todayMissions);
     }
-  }, [isClient, currentSession, whiteboard, todayMissions, today, initializeWhiteboard]);
+  }, [isClient, currentSession, whiteboards, today, getMissionsByDate, initializeWhiteboard]);
 
-  // Debounced position save
+  // Handle date selection from archive
+  const handleSelectDate = useCallback((date: string) => {
+    setViewingDate(date);
+  }, []);
+
+  // Return to today
+  const handleReturnToToday = useCallback(() => {
+    setViewingDate(today);
+  }, [today]);
+
+  // Debounced position save (only for today)
   const saveNodePosition = useDebouncedCallback(
     useCallback(
       (nodeId: string, nodeType: "mission" | "checkpoint", position: { x: number; y: number }) => {
-        updateNodePosition(today, nodeId, nodeType, position);
+        if (!isReadOnly) {
+          updateNodePosition(today, nodeId, nodeType, position);
+        }
       },
-      [today, updateNodePosition]
+      [today, updateNodePosition, isReadOnly]
     ),
     300
   );
@@ -145,6 +169,15 @@ function WhiteboardContent() {
   // Handle node changes with position tracking
   const handleNodesChange = useCallback(
     (changes: NodeChange<Node>[]) => {
+      // In read-only mode, only allow selection changes
+      if (isReadOnly) {
+        const allowedChanges = changes.filter(
+          (change) => change.type === "select" || change.type === "dimensions"
+        );
+        onNodesChange(allowedChanges);
+        return;
+      }
+
       onNodesChange(changes);
 
       // Save positions on drag end
@@ -157,12 +190,14 @@ function WhiteboardContent() {
         }
       });
     },
-    [onNodesChange, saveNodePosition]
+    [onNodesChange, saveNodePosition, isReadOnly]
   );
 
-  // Handle edge connections
+  // Handle edge connections (disabled in read-only mode)
   const onConnect = useCallback(
     (connection: Connection) => {
+      if (isReadOnly) return;
+
       setEdges((eds) =>
         addEdge(
           {
@@ -174,7 +209,7 @@ function WhiteboardContent() {
         )
       );
     },
-    [setEdges]
+    [setEdges, isReadOnly]
   );
 
   // Get viewport center for adding new nodes
@@ -185,8 +220,10 @@ function WhiteboardContent() {
     return { x: centerX, y: centerY };
   }, [reactFlowInstance]);
 
-  // Add a new sticky note
+  // Add a new sticky note (disabled in read-only mode)
   const handleAddNote = useCallback(() => {
+    if (isReadOnly) return;
+
     const center = getViewportCenter();
     const noteId = generateId();
 
@@ -218,11 +255,13 @@ function WhiteboardContent() {
       style: { width: 150, height: 150 },
     };
     setNodes((nds) => [...nds, newNode]);
-  }, [getViewportCenter, today, addStickyNote, deleteStickyNote, updateStickyNote, setNodes]);
+  }, [getViewportCenter, today, addStickyNote, deleteStickyNote, updateStickyNote, setNodes, isReadOnly]);
 
-  // Add a new link card
+  // Add a new link card (disabled in read-only mode)
   const handleAddLink = useCallback(
     (url: string, title: string) => {
+      if (isReadOnly) return;
+
       const center = getViewportCenter();
       const linkId = generateId();
 
@@ -249,7 +288,7 @@ function WhiteboardContent() {
       };
       setNodes((nds) => [...nds, newNode]);
     },
-    [getViewportCenter, today, addLinkCard, deleteLinkCard, setNodes]
+    [getViewportCenter, today, addLinkCard, deleteLinkCard, setNodes, isReadOnly]
   );
 
   // Only render on client
@@ -263,18 +302,6 @@ function WhiteboardContent() {
       router.push("/");
     }
   }, [isClient, currentSession, router]);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (!target.closest("[data-archive-dropdown]")) {
-        setShowArchiveDropdown(false);
-      }
-    };
-    document.addEventListener("click", handleClickOutside);
-    return () => document.removeEventListener("click", handleClickOutside);
-  }, []);
 
   // Loading state
   if (!isClient) {
@@ -296,6 +323,42 @@ function WhiteboardContent() {
 
   return (
     <div className="flex-1 flex flex-col h-[calc(100vh-56px)]">
+      {/* Read-only Banner */}
+      <AnimatePresence>
+        {isReadOnly && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="bg-amber-500/10 border-b border-amber-500/20 overflow-hidden"
+          >
+            <div className="px-4 py-2.5 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                  <Eye className="w-4 h-4 text-amber-500" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-amber-500">
+                    Viewing: {formatDateDisplay(viewingDate)}
+                  </p>
+                  <p className="text-xs text-amber-500/70">
+                    Read-only mode - You can pan and zoom but cannot edit
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={handleReturnToToday}
+                className="flex items-center gap-2 px-4 py-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-500 text-sm font-medium rounded-lg transition-colors"
+              >
+                <span>Return to Today</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Header Bar - 48px */}
       <div className="h-12 bg-surface border-b border-border-subtle px-4 flex items-center justify-between flex-shrink-0">
         {/* Left: Back Link */}
@@ -307,44 +370,25 @@ function WhiteboardContent() {
           <span className="text-sm font-medium">Back to Today</span>
         </Link>
 
-        {/* Center: Date */}
-        <span className="text-sm font-semibold text-text-primary">
-          {formatDateDisplay(today)}
-        </span>
+        {/* Center: Current viewing date */}
+        <div className="flex items-center gap-2">
+          {isReadOnly && (
+            <Calendar className="w-4 h-4 text-amber-500" />
+          )}
+          <span className={cn(
+            "text-sm font-semibold",
+            isReadOnly ? "text-amber-500" : "text-text-primary"
+          )}>
+            {formatDateDisplay(viewingDate)}
+          </span>
+        </div>
 
         {/* Right: Archive Dropdown */}
-        <div className="relative" data-archive-dropdown>
-          <button
-            onClick={() => setShowArchiveDropdown(!showArchiveDropdown)}
-            className={cn(
-              "flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors",
-              showArchiveDropdown
-                ? "bg-surface-hover text-text-primary"
-                : "text-text-secondary hover:text-text-primary hover:bg-surface-hover"
-            )}
-          >
-            <Archive className="w-4 h-4" />
-            <span>Archive</span>
-            <ChevronDown
-              className={cn(
-                "w-3 h-3 transition-transform",
-                showArchiveDropdown && "rotate-180"
-              )}
-            />
-          </button>
-
-          {/* Dropdown placeholder */}
-          {showArchiveDropdown && (
-            <div className="absolute right-0 top-full mt-2 w-64 bg-surface border border-border-subtle rounded-lg shadow-lg z-50 p-4">
-              <p className="text-sm text-text-secondary">
-                Archive functionality coming soon.
-              </p>
-              <p className="text-xs text-text-disabled mt-2">
-                Save whiteboard layouts for future reference.
-              </p>
-            </div>
-          )}
-        </div>
+        <ArchiveDropdown
+          whiteboardDates={whiteboardDates}
+          currentDate={viewingDate}
+          onSelectDate={handleSelectDate}
+        />
       </div>
 
       {/* React Flow Canvas */}
@@ -355,20 +399,23 @@ function WhiteboardContent() {
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
           onNodesChange={handleNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
+          onEdgesChange={isReadOnly ? undefined : onEdgesChange}
+          onConnect={isReadOnly ? undefined : onConnect}
+          nodesDraggable={!isReadOnly}
+          nodesConnectable={!isReadOnly}
+          elementsSelectable={true}
           fitView
           minZoom={0.25}
           maxZoom={2}
           defaultViewport={{ x: 0, y: 0, zoom: 1 }}
           proOptions={{ hideAttribution: true }}
-          className="bg-void"
+          className={cn("bg-void", isReadOnly && "cursor-grab")}
         >
           <Background
             variant={BackgroundVariant.Dots}
             gap={20}
             size={1}
-            color="#1A1A1A"
+            color={isReadOnly ? "#1A1A1A" : "#1A1A1A"}
           />
           <Controls
             className="!bg-surface !border-border-subtle !rounded-lg !shadow-lg"
@@ -390,38 +437,60 @@ function WhiteboardContent() {
           />
         </ReactFlow>
 
-        {/* Bottom Toolbar */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-surface border border-border-subtle rounded-lg shadow-xl px-2 py-1.5">
-          {/* Add Note Button */}
-          <button
-            onClick={handleAddNote}
-            className="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
-          >
-            <StickyNote className="w-4 h-4" />
-            <span>Add Note</span>
-          </button>
+        {/* Bottom Toolbar - Hidden in read-only mode */}
+        {!isReadOnly && (
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-surface border border-border-subtle rounded-lg shadow-xl px-2 py-1.5">
+            {/* Add Note Button */}
+            <button
+              onClick={handleAddNote}
+              className="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
+            >
+              <StickyNote className="w-4 h-4" />
+              <span>Add Note</span>
+            </button>
 
-          {/* Divider */}
-          <div className="w-px h-6 bg-border-subtle" />
+            {/* Divider */}
+            <div className="w-px h-6 bg-border-subtle" />
 
-          {/* Add Link Button */}
-          <button
-            onClick={() => setShowAddLinkModal(true)}
-            className="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
-          >
-            <Link2 className="w-4 h-4" />
-            <span>Add Link</span>
-          </button>
-        </div>
+            {/* Add Link Button */}
+            <button
+              onClick={() => setShowAddLinkModal(true)}
+              className="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
+            >
+              <Link2 className="w-4 h-4" />
+              <span>Add Link</span>
+            </button>
+          </div>
+        )}
 
-        {/* Empty state */}
-        {nodes.length === 0 && (
+        {/* Empty state - No whiteboard for this date */}
+        {nodes.length === 0 && whiteboard === null && (
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
             <div className="text-center">
-              <p className="text-text-secondary text-lg mb-2">No missions for today</p>
-              <p className="text-text-disabled text-sm">
-                Add missions in the Today View to see them here
-              </p>
+              {isReadOnly ? (
+                <>
+                  <Calendar className="w-12 h-12 text-text-disabled mx-auto mb-4" />
+                  <p className="text-text-secondary text-lg mb-2">
+                    No whiteboard saved for this date
+                  </p>
+                  <p className="text-text-disabled text-sm mb-4">
+                    {formatDateDisplay(viewingDate)}
+                  </p>
+                  <button
+                    onClick={handleReturnToToday}
+                    className="pointer-events-auto px-4 py-2 bg-surface hover:bg-surface-hover text-text-primary text-sm rounded-lg border border-border-subtle transition-colors"
+                  >
+                    Return to Today
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="text-text-secondary text-lg mb-2">No missions for today</p>
+                  <p className="text-text-disabled text-sm">
+                    Add missions in the Today View to see them here
+                  </p>
+                </>
+              )}
             </div>
           </div>
         )}
