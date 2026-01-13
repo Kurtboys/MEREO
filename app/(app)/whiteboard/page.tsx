@@ -203,7 +203,7 @@ function WhiteboardContent() {
           {
             ...connection,
             type: "smoothstep",
-            style: { stroke: "#6B7280", strokeWidth: 2 },
+            style: { stroke: "#3A3A3A", strokeWidth: 2 },
           },
           eds
         )
