@@ -117,10 +117,10 @@ export default function LoginPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
-          whileHover={{ y: -2, scale: 1.02 }}
+          whileHover={{ y: -1 }}
           whileTap={{ scale: 0.98 }}
           onClick={handleLoginClick}
-          className="w-full max-w-xs px-8 py-4 bg-accent hover:bg-accent-hover text-void font-semibold text-lg rounded-lg transition-colors duration-200 shadow-lg shadow-accent/20"
+          className="w-full max-w-xs px-8 py-4 bg-accent hover:bg-[#2563EB] text-white font-semibold text-lg rounded-lg transition-all duration-200 shadow-lg shadow-accent/20"
         >
           Login for the Day
         </motion.button>
