@@ -9,11 +9,13 @@ import { Lock, ArrowRight } from "lucide-react";
 import { useMereoStore } from "@/lib/store";
 import { getTodayDateString, formatTimeDisplay } from "@/lib/utils";
 import { DraggableMissionBlock } from "./MissionBlock";
+import { ExecutiveBrief } from "./ExecutiveBrief";
 
 export function MissionSidebar() {
   const router = useRouter();
   const [isClient, setIsClient] = useState(false);
-  const { currentSession, missions, tags, endDaySession } = useMereoStore();
+  const [showBrief, setShowBrief] = useState(false);
+  const { currentSession, missions, tags, endDaySession, carryOverIncompleteMissions } = useMereoStore();
 
   // Only render on client
   useEffect(() => {
@@ -42,10 +44,17 @@ export function MissionSidebar() {
     };
   }, [missions, today]);
 
-  // Handle end day
+  // Handle end day - show executive brief
   const handleEndDay = () => {
+    setShowBrief(true);
+  };
+
+  // Handle confirm end day - actually end session and navigate
+  const handleConfirmEndDay = () => {
     const brief = endDaySession();
     console.log("Executive Brief:", brief);
+    carryOverIncompleteMissions();
+    setShowBrief(false);
     router.push("/");
   };
 
@@ -169,6 +178,13 @@ export function MissionSidebar() {
           End Day
         </button>
       </div>
+
+      {/* Executive Brief Modal */}
+      <ExecutiveBrief
+        isOpen={showBrief}
+        onClose={() => setShowBrief(false)}
+        onConfirm={handleConfirmEndDay}
+      />
     </aside>
   );
 }
