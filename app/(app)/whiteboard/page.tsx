@@ -1,23 +1,49 @@
 "use client";
 
-import { useCurrentSession, useMissionsByDate } from "@/lib/store";
-import { useRequireSession } from "@/lib/hooks";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useMereoStore } from "@/lib/store";
 import { getTodayDateString, formatDateDisplay } from "@/lib/utils";
 
 export default function WhiteboardPage() {
-  const { isLoading, hasSession } = useRequireSession();
-  const today = getTodayDateString();
-  const currentSession = useCurrentSession();
-  const todayMissions = useMissionsByDate(today);
+  const router = useRouter();
+  const [isClient, setIsClient] = useState(false);
+  const { currentSession, missions } = useMereoStore();
 
-  // Show loading spinner while checking session
-  if (isLoading || !hasSession) {
+  // Only render on client
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Redirect if no session
+  useEffect(() => {
+    if (isClient && (!currentSession || !currentSession.isActive)) {
+      router.push("/");
+    }
+  }, [isClient, currentSession, router]);
+
+  // Loading state
+  if (!isClient) {
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
+
+  // No session state
+  if (!currentSession || !currentSession.isActive) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <p className="text-text-secondary">Redirecting to login...</p>
+      </div>
+    );
+  }
+
+  const today = getTodayDateString();
+  const todayMissions = missions
+    .filter((m) => m.scheduledDate === today)
+    .sort((a, b) => a.order - b.order);
 
   return (
     <div className="flex-1 flex flex-col">
@@ -48,10 +74,10 @@ export default function WhiteboardPage() {
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="bg-surface rounded-lg border border-border-subtle p-8 max-w-md text-center">
             <h2 className="text-xl font-semibold mb-4 text-status-warning">
-              Whiteboard Coming in Chunk 6-7
+              Whiteboard Coming Soon
             </h2>
             <p className="text-text-secondary mb-4">
-              This is a placeholder for the infinite canvas whiteboard with React Flow.
+              This is a placeholder for the infinite canvas whiteboard.
               It will include:
             </p>
             <ul className="text-text-secondary text-sm text-left space-y-2">
@@ -71,10 +97,6 @@ export default function WhiteboardPage() {
                 <span className="w-1.5 h-1.5 rounded-full bg-accent" />
                 Pan, zoom, and minimap
               </li>
-              <li className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-accent" />
-                Completion animations
-              </li>
             </ul>
             <p className="text-text-disabled text-sm mt-6">
               {todayMissions.length} missions ready for whiteboard layout
@@ -92,10 +114,6 @@ export default function WhiteboardPage() {
           <span className="text-sm text-text-secondary">100%</span>
           <button className="px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary transition-colors">
             +
-          </button>
-          <span className="w-px h-4 bg-border-subtle" />
-          <button className="px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary transition-colors">
-            Fit View
           </button>
         </div>
         <div className="flex items-center gap-2">

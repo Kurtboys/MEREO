@@ -1,15 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format, addDays, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday } from "date-fns";
-import { useMereoStore, useTags } from "@/lib/store";
+import { useMereoStore } from "@/lib/store";
 import { formatDateKey, cn } from "@/lib/utils";
 
 export default function SchedulerPage() {
+  const [isClient, setIsClient] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const tags = useTags();
-  const { missions, loadSeedData } = useMereoStore();
+  const { tags, missions, loadSeedData } = useMereoStore();
+
+  // Only render on client
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Loading state
+  if (!isClient) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   // Get missions for selected date
   const selectedDateKey = formatDateKey(selectedDate);
