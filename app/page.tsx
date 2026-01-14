@@ -115,7 +115,7 @@ export default function LoginPage() {
           whileHover={{ y: -1 }}
           whileTap={{ scale: 0.98 }}
           onClick={handleLoginClick}
-          className="px-16 py-5 bg-accent hover:bg-[#2563EB] text-white font-black text-2xl rounded-lg transition-all duration-200 shadow-lg shadow-accent/20"
+          className="px-16 py-5 bg-[#3B82F6] hover:bg-[#2563EB] text-white font-black text-2xl rounded-lg transition-all duration-200 shadow-lg shadow-[#3B82F6]/20"
         >
           Login For The Day
         </motion.button>
@@ -141,7 +141,7 @@ export default function LoginPage() {
 
         {/* Version indicator - remove after testing */}
         <div className="fixed bottom-4 right-4 text-xs text-text-disabled/50 font-mono">
-          v0.2.0
+          v0.2.1
         </div>
       </div>
 
