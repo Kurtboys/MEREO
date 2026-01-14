@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
 import { Lock, ArrowRight } from "lucide-react";
 import { useMereoStore } from "@/lib/store";
-import { getTodayDateString, formatTimeDisplay } from "@/lib/utils";
+import { getTodayDateString } from "@/lib/utils";
 import { DraggableMissionBlock } from "./MissionBlock";
 import { ExecutiveBrief } from "./ExecutiveBrief";
 
@@ -67,37 +67,48 @@ export function MissionSidebar() {
     );
   }
 
-  // Safely format dates
-  const formatSessionTime = (time: Date | string | undefined): string => {
-    if (!time) return "--:--";
+  // Format time as military (24hr) format: "0057"
+  const formatMilitaryTime = (time: Date | string | undefined): string => {
+    if (!time) return "----";
     try {
       const date = typeof time === "string" ? new Date(time) : time;
-      if (isNaN(date.getTime())) return "--:--";
-      return formatTimeDisplay(date);
+      if (isNaN(date.getTime())) return "----";
+      const hours = date.getHours().toString().padStart(2, "0");
+      const minutes = date.getMinutes().toString().padStart(2, "0");
+      return `${hours}${minutes}`;
     } catch {
-      return "--:--";
+      return "----";
     }
+  };
+
+  // Format date as military style: "14 JAN 2026"
+  const formatMilitaryDate = (date: Date): string => {
+    return format(date, "dd MMM yyyy").toUpperCase();
   };
 
   return (
     <aside className="w-[280px] h-full bg-surface border-r border-border-subtle flex flex-col">
       {/* Header */}
-      <div className="p-4 border-b border-border-subtle">
-        {/* Date */}
-        <h2 className="text-lg font-black mb-1">
-          {format(new Date(), "EEEE, MMM d")}
+      <div className="p-5 border-b border-border-subtle space-y-4">
+        {/* Mission Queue Label */}
+        <p className="text-xs font-mono font-light text-text-disabled uppercase tracking-[0.2em]">
+          MISSION QUEUE
+        </p>
+
+        {/* Date - Military Format */}
+        <h2 className="text-lg font-black tracking-wide text-text-primary">
+          {formatMilitaryDate(new Date())}
         </h2>
 
-        {/* Time range */}
-        <p className="text-sm text-text-secondary font-mono font-light mb-3">
-          {formatSessionTime(currentSession.startTime)} -{" "}
-          {formatSessionTime(currentSession.endTime)}
+        {/* Time range - Military Format */}
+        <p className="text-sm text-text-secondary font-mono font-light">
+          {formatMilitaryTime(currentSession.startTime)} - {formatMilitaryTime(currentSession.endTime)} HRS
         </p>
 
         {/* Whiteboard link */}
         <Link
           href="/whiteboard"
-          className="flex items-center gap-2 text-sm text-accent hover:text-accent-hover transition-colors"
+          className="flex items-center gap-2 text-sm font-medium text-accent hover:text-accent-hover transition-colors"
         >
           Open Whiteboard
           <ArrowRight className="w-4 h-4" />
@@ -106,7 +117,7 @@ export function MissionSidebar() {
 
       {/* Reorder lock indicator */}
       {hasStartedMission && (
-        <div className="px-4 py-2 bg-void/50 flex items-center gap-2 text-xs text-text-disabled">
+        <div className="px-4 py-2 bg-void/50 flex items-center gap-2 text-xs font-medium text-text-disabled">
           <Lock className="w-3 h-3" />
           <span>Order locked after first mission</span>
         </div>
@@ -143,7 +154,7 @@ export function MissionSidebar() {
         {/* Bottleneck missions at bottom */}
         {bottleneckMissions.length > 0 && (
           <div className="mt-6 pt-4 border-t border-border-subtle">
-            <p className="text-xs text-text-disabled uppercase tracking-wide mb-3">
+            <p className="text-xs font-mono font-light text-text-disabled uppercase tracking-[0.2em] mb-3">
               Bottlenecked
             </p>
             <div className="space-y-3">

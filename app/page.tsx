@@ -1,20 +1,22 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { format, addHours, setHours, setMinutes } from "date-fns";
+import { format } from "date-fns";
 import { useMereoStore, useStoreHydration } from "@/lib/store";
 import { useToast } from "@/components/Toast";
 import { getTodayDateString } from "@/lib/utils";
 
+// Default end time: 4 AM the next calendar day
+const DEFAULT_DAY_END_HOUR = 4;
+
 export default function LoginPage() {
   const router = useRouter();
   const hydrated = useStoreHydration();
-  const { dayStarted, success } = useToast();
+  const { dayStarted } = useToast();
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const { missions, currentSession, startDaySession, loadSeedData } = useMereoStore();
+  const { missions, currentSession, startDaySession } = useMereoStore();
 
   // Get yesterday's incomplete/bottleneck missions
   const carryoverMissions = missions.filter(
@@ -50,23 +52,16 @@ export default function LoginPage() {
   }, [currentSession, router, hydrated]);
 
   const handleLoginClick = () => {
-    setIsModalOpen(true);
+    // Calculate end time: 4 AM the next calendar day
+    const now = new Date();
+    const endTime = new Date(now);
+    endTime.setDate(endTime.getDate() + 1); // Tomorrow
+    endTime.setHours(DEFAULT_DAY_END_HOUR, 0, 0, 0); // 4:00 AM
+
+    startDaySession(endTime);
+    dayStarted();
+    router.push("/today");
   };
-
-  const handleStartDay = useCallback(
-    (endTime: Date) => {
-      startDaySession(endTime);
-      setIsModalOpen(false);
-      dayStarted();
-      router.push("/today");
-    },
-    [startDaySession, router, dayStarted]
-  );
-
-  const handleLoadSeedData = useCallback(() => {
-    loadSeedData();
-    success("Sample data loaded", "3 missions added to your schedule");
-  }, [loadSeedData, success]);
 
   // Show loading state until client hydrates
   if (!currentTime || !hydrated) {
@@ -78,251 +73,97 @@ export default function LoginPage() {
   }
 
   return (
-    <>
-      <div className="min-h-screen flex flex-col items-center justify-center px-6">
-        {/* Wordmark */}
-        <motion.h1
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          className="text-6xl md:text-7xl lg:text-8xl font-black tracking-tight mb-4"
-        >
-          MEREO
-        </motion.h1>
+    <div className="min-h-screen flex flex-col items-center justify-center px-6">
+      {/* Wordmark */}
+      <motion.h1
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="text-6xl md:text-7xl lg:text-8xl font-black tracking-tight mb-4"
+      >
+        MEREO
+      </motion.h1>
 
-        {/* Tagline */}
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
-          className="text-text-secondary text-lg md:text-xl mb-16"
-        >
-          Missions. Not tasks.
-        </motion.p>
+      {/* Tagline */}
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+        className="text-text-secondary text-lg md:text-xl mb-8"
+      >
+        Missions. Not tasks.
+      </motion.p>
 
-        {/* Current Time */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
-          className="mb-8"
-        >
-          <span className="font-mono font-light text-3xl md:text-4xl text-text-secondary">
-            {format(currentTime, "h:mm:ss a")}
-          </span>
-        </motion.div>
-
-        {/* Login Button */}
-        <motion.button
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
-          whileHover={{ y: -1 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={handleLoginClick}
-          className="w-full max-w-xs px-8 py-4 bg-accent hover:bg-[#2563EB] text-white font-semibold text-lg rounded-lg transition-all duration-200 shadow-lg shadow-accent/20"
-        >
-          Login for the Day
-        </motion.button>
-
-        {/* Carryover Indicator */}
-        <AnimatePresence>
-          {waitingMissions > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              transition={{ duration: 0.4, delay: 0.7 }}
-              className="mt-6 flex items-center gap-2 text-status-warning"
-            >
-              <span className="w-2 h-2 rounded-full bg-status-warning animate-pulse" />
-              <span className="text-sm">
-                {waitingMissions} mission{waitingMissions !== 1 ? "s" : ""} waiting
-                from yesterday
-              </span>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Dev: Load Seed Data Button (for testing) */}
-        {missions.length === 0 && (
-          <motion.button
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4, delay: 1 }}
-            onClick={handleLoadSeedData}
-            className="mt-12 px-4 py-2 text-sm text-text-disabled hover:text-text-secondary transition-colors"
-          >
-            Load sample missions
-          </motion.button>
-        )}
-
-        {/* Footer Links */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.4, delay: 1.2 }}
-          className="fixed bottom-6 flex gap-4 text-sm text-text-disabled"
-        >
-          <a href="/design-system" className="hover:text-text-secondary transition-colors">
-            Design System
-          </a>
-          <span>|</span>
-          <a href="/store-test" className="hover:text-text-secondary transition-colors">
-            Store Test
-          </a>
-        </motion.div>
-      </div>
-
-      {/* End Time Picker Modal */}
-      <AnimatePresence>
-        {isModalOpen && (
-          <EndTimePickerModal
-            onClose={() => setIsModalOpen(false)}
-            onConfirm={handleStartDay}
-            defaultTime={addHours(new Date(), 12)}
-          />
-        )}
-      </AnimatePresence>
-    </>
-  );
-}
-
-// ============================================
-// End Time Picker Modal Component
-// ============================================
-
-interface EndTimePickerModalProps {
-  onClose: () => void;
-  onConfirm: (endTime: Date) => void;
-  defaultTime: Date;
-}
-
-function EndTimePickerModal({
-  onClose,
-  onConfirm,
-  defaultTime,
-}: EndTimePickerModalProps) {
-  const [selectedHour, setSelectedHour] = useState(defaultTime.getHours());
-  const [selectedMinute, setSelectedMinute] = useState(
-    Math.floor(defaultTime.getMinutes() / 15) * 15
-  );
-
-  const handleConfirm = () => {
-    const endTime = setMinutes(setHours(new Date(), selectedHour), selectedMinute);
-    onConfirm(endTime);
-  };
-
-  // Format hour for display (12-hour format)
-  const formatHour = (hour: number) => {
-    const h = hour % 12 || 12;
-    const ampm = hour >= 12 ? "PM" : "AM";
-    return `${h} ${ampm}`;
-  };
-
-  // Generate hours array (0-23)
-  const hours = Array.from({ length: 24 }, (_, i) => i);
-  // Generate minutes array (0, 15, 30, 45)
-  const minutes = [0, 15, 30, 45];
-
-  return (
-    <>
-      {/* Backdrop */}
+      {/* Current Time */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.2 }}
-        onClick={onClose}
-        className="fixed inset-0 bg-void/80 backdrop-blur-sm z-40"
-      />
-
-      {/* Modal */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        transition={{ duration: 0.3, ease: "easeOut" }}
-        className="fixed inset-0 z-50 flex items-center justify-center p-6 pointer-events-none"
+        transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
       >
-        <div className="w-full max-w-sm bg-surface border border-border-subtle rounded-2xl p-8 shadow-2xl pointer-events-auto">
-          {/* Title */}
-          <h2 className="text-2xl font-black text-center mb-2">
-            When does your day end?
-          </h2>
-          <p className="text-text-secondary text-center text-sm mb-8">
-            Set your target end time for today
-          </p>
-
-          {/* Time Picker */}
-          <div className="flex items-center justify-center gap-4 mb-8">
-            {/* Hour Selector */}
-            <div className="flex flex-col items-center">
-              <label className="text-xs text-text-secondary mb-2 uppercase tracking-wide">
-                Hour
-              </label>
-              <select
-                value={selectedHour}
-                onChange={(e) => setSelectedHour(Number(e.target.value))}
-                className="w-28 px-4 py-3 bg-void border border-border-subtle rounded-lg text-text-primary text-center font-mono text-lg appearance-none cursor-pointer focus:outline-none focus:border-border-focus"
-              >
-                {hours.map((hour) => (
-                  <option key={hour} value={hour}>
-                    {formatHour(hour)}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <span className="text-3xl text-text-secondary mt-6">:</span>
-
-            {/* Minute Selector */}
-            <div className="flex flex-col items-center">
-              <label className="text-xs text-text-secondary mb-2 uppercase tracking-wide">
-                Min
-              </label>
-              <select
-                value={selectedMinute}
-                onChange={(e) => setSelectedMinute(Number(e.target.value))}
-                className="w-20 px-4 py-3 bg-void border border-border-subtle rounded-lg text-text-primary text-center font-mono text-lg appearance-none cursor-pointer focus:outline-none focus:border-border-focus"
-              >
-                {minutes.map((min) => (
-                  <option key={min} value={min}>
-                    {min.toString().padStart(2, "0")}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Preview */}
-          <div className="text-center mb-8">
-            <span className="text-text-secondary text-sm">Your day ends at </span>
-            <span className="font-mono text-accent">
-              {(selectedHour % 12 || 12)}:{selectedMinute.toString().padStart(2, "0")}
-              {selectedHour >= 12 ? " PM" : " AM"}
-            </span>
-          </div>
-
-          {/* Actions */}
-          <div className="flex gap-3">
-            <button
-              onClick={onClose}
-              className="flex-1 px-6 py-3 bg-void border border-border-subtle text-text-primary rounded-lg hover:bg-surface-hover transition-colors"
-            >
-              Cancel
-            </button>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={handleConfirm}
-              className="flex-1 px-6 py-3 bg-accent hover:bg-accent-hover text-void font-semibold rounded-lg transition-colors"
-            >
-              Start My Day
-            </motion.button>
-          </div>
-        </div>
+        <span className="font-mono font-light text-3xl md:text-4xl text-text-secondary">
+          {format(currentTime, "h:mm:ss a")}
+        </span>
       </motion.div>
-    </>
+
+      {/* Login Button */}
+      <motion.button
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
+        whileHover={{
+          y: -2,
+          textShadow: "0 0 20px rgba(59, 130, 246, 0.6)",
+        }}
+        whileTap={{ scale: 0.98 }}
+        onClick={handleLoginClick}
+        style={{
+          marginTop: "3rem",
+          padding: "1rem 2rem",
+          backgroundColor: "transparent",
+          color: "#FFFFFF",
+          fontWeight: 900,
+          fontSize: "1.5rem",
+          border: "none",
+          borderBottom: "2px solid #3B82F6",
+          boxShadow: "0 4px 15px -3px rgba(59, 130, 246, 0.3)",
+          transition: "all 200ms ease",
+          cursor: "pointer",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.borderBottomWidth = "3px";
+          e.currentTarget.style.boxShadow = "0 6px 25px -3px rgba(59, 130, 246, 0.5)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.borderBottomWidth = "2px";
+          e.currentTarget.style.boxShadow = "0 4px 15px -3px rgba(59, 130, 246, 0.3)";
+        }}
+      >
+        Login For The Day
+      </motion.button>
+
+      {/* Carryover Indicator */}
+      <AnimatePresence>
+        {waitingMissions > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.4, delay: 0.7 }}
+            className="mt-6 flex items-center gap-2 text-status-warning"
+          >
+            <span className="w-2 h-2 rounded-full bg-status-warning animate-pulse" />
+            <span className="text-sm">
+              {waitingMissions} mission{waitingMissions !== 1 ? "s" : ""} waiting
+              from yesterday
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Version indicator - remove after testing */}
+      <div className="fixed bottom-4 right-4 text-xs text-text-disabled/50 font-mono">
+        v0.5.0
+      </div>
+    </div>
   );
 }
