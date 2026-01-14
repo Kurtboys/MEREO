@@ -115,9 +115,9 @@ export default function LoginPage() {
           whileHover={{ y: -1 }}
           whileTap={{ scale: 0.98 }}
           onClick={handleLoginClick}
-          className="px-12 py-4 bg-accent hover:bg-[#2563EB] text-white font-black text-xl rounded-lg transition-all duration-200 shadow-lg shadow-accent/20"
+          className="px-16 py-5 bg-accent hover:bg-[#2563EB] text-white font-black text-2xl rounded-lg transition-all duration-200 shadow-lg shadow-accent/20"
         >
-          Login for the Day
+          Login For The Day
         </motion.button>
 
         {/* Carryover Indicator */}
