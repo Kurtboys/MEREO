@@ -163,7 +163,7 @@ export default function LoginPage() {
 
         {/* Version indicator - remove after testing */}
         <div className="fixed bottom-4 right-4 text-xs text-text-disabled/50 font-mono">
-          v0.2.4
+          v0.2.5
         </div>
       </div>
 
@@ -196,27 +196,61 @@ function EndTimePickerModal({
   onConfirm,
   defaultTime,
 }: EndTimePickerModalProps) {
-  const [selectedHour, setSelectedHour] = useState(defaultTime.getHours());
+  // Convert 24-hour default to 12-hour format
+  const defaultHour12 = defaultTime.getHours() % 12 || 12;
+  const defaultIsPM = defaultTime.getHours() >= 12;
+
+  const [selectedHour, setSelectedHour] = useState(defaultHour12);
   const [selectedMinute, setSelectedMinute] = useState(
     Math.floor(defaultTime.getMinutes() / 15) * 15
   );
+  const [isPM, setIsPM] = useState(defaultIsPM);
+
+  // Convert to 24-hour format for calculations
+  const get24Hour = () => {
+    if (isPM) {
+      return selectedHour === 12 ? 12 : selectedHour + 12;
+    } else {
+      return selectedHour === 12 ? 0 : selectedHour;
+    }
+  };
+
+  // Check if end time is tomorrow
+  const isNextDay = () => {
+    const now = new Date();
+    const endTime = new Date();
+    endTime.setHours(get24Hour(), selectedMinute, 0, 0);
+    return endTime <= now;
+  };
 
   const handleConfirm = () => {
-    const endTime = setMinutes(setHours(new Date(), selectedHour), selectedMinute);
+    const endTime = new Date();
+    endTime.setHours(get24Hour(), selectedMinute, 0, 0);
+
+    // If end time is before now, it's tomorrow
+    if (endTime <= new Date()) {
+      endTime.setDate(endTime.getDate() + 1);
+    }
+
     onConfirm(endTime);
   };
 
-  // Format hour for display (12-hour format)
-  const formatHour = (hour: number) => {
-    const h = hour % 12 || 12;
-    const ampm = hour >= 12 ? "PM" : "AM";
-    return `${h} ${ampm}`;
-  };
-
-  // Generate hours array (0-23)
-  const hours = Array.from({ length: 24 }, (_, i) => i);
+  // Generate hours array (1-12)
+  const hours = Array.from({ length: 12 }, (_, i) => i + 1);
   // Generate minutes array (0, 15, 30, 45)
   const minutes = [0, 15, 30, 45];
+
+  // Shared button style
+  const glowButtonStyle = {
+    backgroundColor: "transparent",
+    color: "#FFFFFF",
+    fontWeight: 600,
+    border: "none",
+    borderBottom: "2px solid #3B82F6",
+    boxShadow: "0 4px 15px -3px rgba(59, 130, 246, 0.3)",
+    transition: "all 200ms ease",
+    cursor: "pointer",
+  };
 
   return (
     <>
@@ -238,78 +272,120 @@ function EndTimePickerModal({
         transition={{ duration: 0.3, ease: "easeOut" }}
         className="fixed inset-0 z-50 flex items-center justify-center p-6 pointer-events-none"
       >
-        <div className="w-full max-w-sm bg-surface border border-border-subtle rounded-2xl p-8 shadow-2xl pointer-events-auto">
+        <div className="w-full max-w-md bg-surface border border-border-subtle rounded-2xl p-10 shadow-2xl pointer-events-auto">
           {/* Title */}
-          <h2 className="text-2xl font-black text-center mb-2">
+          <h2 className="text-2xl font-black text-center mb-4">
             When does your day end?
           </h2>
-          <p className="text-text-secondary text-center text-sm mb-8">
+          <p className="text-text-secondary text-center text-sm mb-10">
             Set your target end time for today
           </p>
 
           {/* Time Picker */}
-          <div className="flex items-center justify-center gap-4 mb-8">
+          <div className="flex items-center justify-center gap-3 mb-8">
             {/* Hour Selector */}
-            <div className="flex flex-col items-center">
-              <label className="text-xs text-text-secondary mb-2 uppercase tracking-wide">
-                Hour
-              </label>
-              <select
-                value={selectedHour}
-                onChange={(e) => setSelectedHour(Number(e.target.value))}
-                className="w-28 px-4 py-3 bg-void border border-border-subtle rounded-lg text-text-primary text-center font-mono text-lg appearance-none cursor-pointer focus:outline-none focus:border-border-focus"
-              >
-                {hours.map((hour) => (
-                  <option key={hour} value={hour}>
-                    {formatHour(hour)}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <select
+              value={selectedHour}
+              onChange={(e) => setSelectedHour(Number(e.target.value))}
+              className="w-20 px-3 py-4 bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg text-text-primary text-center font-mono text-xl appearance-none cursor-pointer focus:outline-none focus:border-accent"
+              style={{ WebkitAppearance: "none", MozAppearance: "none" }}
+            >
+              {hours.map((hour) => (
+                <option key={hour} value={hour}>
+                  {hour}
+                </option>
+              ))}
+            </select>
 
-            <span className="text-3xl text-text-secondary mt-6">:</span>
+            <span className="text-3xl text-text-secondary font-mono font-light">:</span>
 
             {/* Minute Selector */}
-            <div className="flex flex-col items-center">
-              <label className="text-xs text-text-secondary mb-2 uppercase tracking-wide">
-                Min
-              </label>
-              <select
-                value={selectedMinute}
-                onChange={(e) => setSelectedMinute(Number(e.target.value))}
-                className="w-20 px-4 py-3 bg-void border border-border-subtle rounded-lg text-text-primary text-center font-mono text-lg appearance-none cursor-pointer focus:outline-none focus:border-border-focus"
+            <select
+              value={selectedMinute}
+              onChange={(e) => setSelectedMinute(Number(e.target.value))}
+              className="w-20 px-3 py-4 bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg text-text-primary text-center font-mono text-xl appearance-none cursor-pointer focus:outline-none focus:border-accent"
+              style={{ WebkitAppearance: "none", MozAppearance: "none" }}
+            >
+              {minutes.map((min) => (
+                <option key={min} value={min}>
+                  {min.toString().padStart(2, "0")}
+                </option>
+              ))}
+            </select>
+
+            {/* AM/PM Toggle */}
+            <div className="flex rounded-lg overflow-hidden border border-[#2A2A2A] ml-2">
+              <button
+                onClick={() => setIsPM(false)}
+                className={`px-4 py-4 font-mono text-sm transition-all ${
+                  !isPM
+                    ? "bg-accent text-void font-semibold"
+                    : "bg-[#1A1A1A] text-text-secondary hover:text-text-primary"
+                }`}
               >
-                {minutes.map((min) => (
-                  <option key={min} value={min}>
-                    {min.toString().padStart(2, "0")}
-                  </option>
-                ))}
-              </select>
+                AM
+              </button>
+              <button
+                onClick={() => setIsPM(true)}
+                className={`px-4 py-4 font-mono text-sm transition-all ${
+                  isPM
+                    ? "bg-accent text-void font-semibold"
+                    : "bg-[#1A1A1A] text-text-secondary hover:text-text-primary"
+                }`}
+              >
+                PM
+              </button>
             </div>
           </div>
 
           {/* Preview */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-10">
             <span className="text-text-secondary text-sm">Your day ends at </span>
             <span className="font-mono text-accent">
-              {(selectedHour % 12 || 12)}:{selectedMinute.toString().padStart(2, "0")}
-              {selectedHour >= 12 ? " PM" : " AM"}
+              {selectedHour}:{selectedMinute.toString().padStart(2, "0")} {isPM ? "PM" : "AM"}
             </span>
+            {isNextDay() && (
+              <span className="text-text-secondary text-sm"> tomorrow</span>
+            )}
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3">
-            <button
+          <div className="flex gap-4 mt-8">
+            <motion.button
+              whileHover={{ y: -1 }}
+              whileTap={{ scale: 0.98 }}
               onClick={onClose}
-              className="flex-1 px-6 py-3 bg-void border border-border-subtle text-text-primary rounded-lg hover:bg-surface-hover transition-colors"
+              style={{
+                ...glowButtonStyle,
+                borderBottomColor: "#4A4A4A",
+                boxShadow: "0 4px 15px -3px rgba(74, 74, 74, 0.2)",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderBottomWidth = "3px";
+                e.currentTarget.style.boxShadow = "0 6px 20px -3px rgba(74, 74, 74, 0.3)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderBottomWidth = "2px";
+                e.currentTarget.style.boxShadow = "0 4px 15px -3px rgba(74, 74, 74, 0.2)";
+              }}
+              className="flex-1 px-6 py-3"
             >
               Cancel
-            </button>
+            </motion.button>
             <motion.button
-              whileHover={{ scale: 1.02 }}
+              whileHover={{ y: -1 }}
               whileTap={{ scale: 0.98 }}
               onClick={handleConfirm}
-              className="flex-1 px-6 py-3 bg-accent hover:bg-accent-hover text-void font-semibold rounded-lg transition-colors"
+              style={glowButtonStyle}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderBottomWidth = "3px";
+                e.currentTarget.style.boxShadow = "0 6px 25px -3px rgba(59, 130, 246, 0.5)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderBottomWidth = "2px";
+                e.currentTarget.style.boxShadow = "0 4px 15px -3px rgba(59, 130, 246, 0.3)";
+              }}
+              className="flex-1 px-6 py-3 font-semibold"
             >
               Start My Day
             </motion.button>
