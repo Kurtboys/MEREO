@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { format } from "date-fns";
 import { useCurrentSession, useStoreHydration } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +17,25 @@ const navLinks: NavLink[] = [
   { href: "/whiteboard", label: "Whiteboard", requiresSession: true },
   { href: "/scheduler", label: "Scheduler", requiresSession: false },
 ];
+
+// Format time as military (24hr) format: "0057 HRS"
+function formatMilitaryTime(date: Date | string | undefined): string {
+  if (!date) return "----";
+  try {
+    const d = typeof date === "string" ? new Date(date) : date;
+    if (isNaN(d.getTime())) return "----";
+    const hours = d.getHours().toString().padStart(2, "0");
+    const minutes = d.getMinutes().toString().padStart(2, "0");
+    return `${hours}${minutes}`;
+  } catch {
+    return "----";
+  }
+}
+
+// Format date as military style: "14 JAN 2026"
+function formatMilitaryDate(date: Date): string {
+  return format(date, "dd MMM yyyy").toUpperCase();
+}
 
 export function AppNav() {
   const pathname = usePathname();
@@ -32,18 +52,36 @@ export function AppNav() {
   const logoHref = hasActiveSession ? "/today" : "/";
 
   return (
-    <header className="h-14 bg-surface border-b border-border-subtle sticky top-0 z-30">
-      <nav className="h-full max-w-7xl mx-auto px-4 flex items-center justify-between">
-        {/* Logo */}
-        <Link
-          href={logoHref}
-          className="text-xl font-black tracking-tight hover:text-accent transition-all duration-200"
-        >
-          MEREO
-        </Link>
+    <header className="h-16 bg-surface border-b border-border-subtle sticky top-0 z-30">
+      <nav className="h-full max-w-7xl mx-auto px-6 flex items-center justify-between">
+        {/* Left side - Logo + Date/Time */}
+        <div className="flex items-center gap-8">
+          {/* Logo */}
+          <Link
+            href={logoHref}
+            className="text-xl font-black tracking-tight hover:text-accent transition-all duration-200"
+          >
+            MEREO
+          </Link>
 
-        {/* Navigation Links */}
-        <div className="flex items-center gap-1">
+          {/* Date and Time Range - only show when session active */}
+          {hasActiveSession && currentSession && (
+            <div className="flex items-center gap-6">
+              {/* Military Date */}
+              <span className="text-sm font-black tracking-wide text-text-primary">
+                {formatMilitaryDate(new Date())}
+              </span>
+
+              {/* Time Range */}
+              <span className="text-sm font-mono font-light text-text-secondary">
+                {formatMilitaryTime(currentSession.startTime)} - {formatMilitaryTime(currentSession.endTime)} HRS
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Center - Navigation Links */}
+        <div className="flex items-center gap-2">
           {visibleLinks.map((link) => {
             const isActive = pathname === link.href;
             return (
@@ -51,7 +89,7 @@ export function AppNav() {
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  "px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 relative",
+                  "px-5 py-2 text-sm font-medium rounded-lg transition-all duration-200 relative",
                   isActive
                     ? "text-accent"
                     : "text-text-secondary hover:text-accent hover:bg-surface-hover"
@@ -67,14 +105,9 @@ export function AppNav() {
           })}
         </div>
 
-        {/* Right side - session indicator */}
-        <div className="flex items-center gap-3">
-          {hasActiveSession ? (
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-status-success animate-pulse" />
-              <span className="text-xs text-text-secondary">Session Active</span>
-            </div>
-          ) : (
+        {/* Right side - spacer for balance (session indicator removed) */}
+        <div className="flex items-center gap-3 w-[180px] justify-end">
+          {!hasActiveSession && (
             <Link
               href="/"
               className="text-xs text-text-secondary hover:text-accent transition-all duration-200"

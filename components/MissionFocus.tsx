@@ -207,17 +207,34 @@ export function MissionFocus() {
               </motion.button>
             </motion.div>
           ) : (
-            // No missions at all
+            // No missions at all - Tactical Empty State
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.5 }}
+              className="text-center"
             >
-              <h2 className="text-2xl font-black mb-3 text-text-secondary">
+              {/* Tactical crosshair icon */}
+              <div className="relative w-24 h-24 mx-auto mb-8">
+                {/* Outer ring */}
+                <div className="absolute inset-0 border border-[#2A2A2A] rounded-full" />
+                {/* Inner ring */}
+                <div className="absolute inset-4 border border-[#2A2A2A] rounded-full" />
+                {/* Crosshairs */}
+                <div className="absolute top-1/2 left-0 right-0 h-px bg-[#2A2A2A]" />
+                <div className="absolute left-1/2 top-0 bottom-0 w-px bg-[#2A2A2A]" />
+                {/* Center dot */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-text-disabled" />
+              </div>
+
+              <p className="text-xs font-mono font-light text-text-disabled uppercase tracking-[0.3em] mb-4">
+                STANDBY
+              </p>
+              <h2 className="text-2xl font-black mb-4 text-text-secondary">
                 No Missions Scheduled
               </h2>
-              <p className="text-text-disabled">
-                Plan your missions in the Scheduler.
+              <p className="text-text-disabled text-sm">
+                Deploy missions from the Scheduler
               </p>
             </motion.div>
           )}
