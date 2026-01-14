@@ -5,8 +5,6 @@ import { useRouter } from "next/navigation";
 import { useMereoStore } from "@/lib/store";
 import { MissionSidebar } from "@/components/MissionSidebar";
 import { MissionFocus } from "@/components/MissionFocus";
-import { TacticalGrid } from "@/components/TacticalGrid";
-import { HUDCornerBrackets } from "@/components/HUDCornerBrackets";
 
 export default function TodayPage() {
   const router = useRouter();
@@ -44,20 +42,14 @@ export default function TodayPage() {
   }
 
   return (
-    <div className="h-[calc(100vh-64px)] flex">
+    <div className="h-[calc(100vh-80px)] flex">
       {/* Sidebar - 280px fixed */}
       <MissionSidebar />
 
-      {/* Main Focus Area - The Ops Board */}
+      {/* Main Focus Area */}
       <main className="flex-1 bg-void overflow-hidden relative">
-        {/* Tactical Grid Background */}
-        <TacticalGrid />
-
-        {/* HUD Corner Brackets */}
-        <HUDCornerBrackets />
-
         {/* Mission Focus Content */}
-        <div className="relative z-10 h-full">
+        <div className="h-full">
           <MissionFocus />
         </div>
       </main>

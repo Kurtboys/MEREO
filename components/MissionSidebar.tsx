@@ -4,12 +4,29 @@ import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { format } from "date-fns";
 import { Lock, ArrowRight } from "lucide-react";
 import { useMereoStore } from "@/lib/store";
 import { getTodayDateString } from "@/lib/utils";
 import { DraggableMissionBlock } from "./MissionBlock";
 import { ExecutiveBrief } from "./ExecutiveBrief";
+
+// Format date in casual style: "Jan 14th, 2026"
+function formatCasualDate(date: Date): string {
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const day = date.getDate();
+  const suffix = getDaySuffix(day);
+  return months[date.getMonth()] + " " + day + suffix + ", " + date.getFullYear();
+}
+
+function getDaySuffix(day: number): string {
+  if (day >= 11 && day <= 13) return "th";
+  switch (day % 10) {
+    case 1: return "st";
+    case 2: return "nd";
+    case 3: return "rd";
+    default: return "th";
+  }
+}
 
 export function MissionSidebar() {
   const router = useRouter();
@@ -67,43 +84,19 @@ export function MissionSidebar() {
     );
   }
 
-  // Format time as military (24hr) format: "0057"
-  const formatMilitaryTime = (time: Date | string | undefined): string => {
-    if (!time) return "----";
-    try {
-      const date = typeof time === "string" ? new Date(time) : time;
-      if (isNaN(date.getTime())) return "----";
-      const hours = date.getHours().toString().padStart(2, "0");
-      const minutes = date.getMinutes().toString().padStart(2, "0");
-      return `${hours}${minutes}`;
-    } catch {
-      return "----";
-    }
-  };
-
-  // Format date as military style: "14 JAN 2026"
-  const formatMilitaryDate = (date: Date): string => {
-    return format(date, "dd MMM yyyy").toUpperCase();
-  };
-
   return (
     <aside className="w-[280px] h-full bg-surface border-r border-border-subtle flex flex-col">
       {/* Header */}
-      <div className="p-5 border-b border-border-subtle">
+      <div className="px-6 py-8 border-b border-border-subtle space-y-6">
         {/* Mission Queue Label */}
-        <p className="text-xs font-mono font-light text-text-disabled uppercase tracking-[0.2em] mb-3">
+        <p className="text-xs font-mono font-light text-text-disabled uppercase tracking-[0.2em]">
           MISSION QUEUE
         </p>
 
-        {/* Date - Military Format */}
-        <h2 className="text-lg font-black mb-2 tracking-wide">
-          {formatMilitaryDate(new Date())}
+        {/* Date - Casual Format */}
+        <h2 className="text-xl font-black tracking-tight">
+          {formatCasualDate(new Date())}
         </h2>
-
-        {/* Time range - Military Format */}
-        <p className="text-sm text-text-secondary font-mono font-light mb-4">
-          {formatMilitaryTime(currentSession.startTime)} - {formatMilitaryTime(currentSession.endTime)} HRS
-        </p>
 
         {/* Whiteboard link */}
         <Link
@@ -124,7 +117,7 @@ export function MissionSidebar() {
       )}
 
       {/* Mission List */}
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex-1 overflow-y-auto px-6 py-4">
         <div className="space-y-3">
           <AnimatePresence mode="popLayout">
             {regularMissions.map((mission) => {
@@ -181,12 +174,23 @@ export function MissionSidebar() {
       </div>
 
       {/* Footer */}
-      <div className="p-4 border-t border-border-subtle">
+      <div className="mt-auto px-6 py-6 border-t border-border-subtle">
         <button
           onClick={handleEndDay}
-          className="w-full px-4 py-2 text-sm text-text-secondary border border-border-subtle hover:text-text-primary hover:bg-surface-hover hover:border-text-disabled rounded-lg transition-all duration-200"
+          className="w-full px-6 py-3 text-lg font-black text-text-primary bg-transparent border-b-2 border-accent hover:border-b-[3px] transition-all duration-200"
+          style={{
+            boxShadow: "0 4px 15px -3px rgba(59, 130, 246, 0.2)",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.boxShadow = "0 6px 20px -3px rgba(59, 130, 246, 0.4)";
+            e.currentTarget.style.textShadow = "0 0 15px rgba(59, 130, 246, 0.4)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.boxShadow = "0 4px 15px -3px rgba(59, 130, 246, 0.2)";
+            e.currentTarget.style.textShadow = "none";
+          }}
         >
-          End Day
+          Clock Out
         </button>
       </div>
 

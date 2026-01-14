@@ -18,23 +18,21 @@ const navLinks: NavLink[] = [
   { href: "/scheduler", label: "Scheduler", requiresSession: false },
 ];
 
-// Format time as military (24hr) format: "0057 HRS"
-function formatMilitaryTime(date: Date | string | undefined): string {
-  if (!date) return "----";
-  try {
-    const d = typeof date === "string" ? new Date(date) : date;
-    if (isNaN(d.getTime())) return "----";
-    const hours = d.getHours().toString().padStart(2, "0");
-    const minutes = d.getMinutes().toString().padStart(2, "0");
-    return `${hours}${minutes}`;
-  } catch {
-    return "----";
-  }
+// Format date in casual style: "Jan 14th, 2026"
+function formatCasualDate(date: Date): string {
+  const day = date.getDate();
+  const suffix = getDaySuffix(day);
+  return format(date, "MMM") + " " + day + suffix + ", " + format(date, "yyyy");
 }
 
-// Format date as military style: "14 JAN 2026"
-function formatMilitaryDate(date: Date): string {
-  return format(date, "dd MMM yyyy").toUpperCase();
+function getDaySuffix(day: number): string {
+  if (day >= 11 && day <= 13) return "th";
+  switch (day % 10) {
+    case 1: return "st";
+    case 2: return "nd";
+    case 3: return "rd";
+    default: return "th";
+  }
 }
 
 export function AppNav() {
@@ -52,9 +50,9 @@ export function AppNav() {
   const logoHref = hasActiveSession ? "/today" : "/";
 
   return (
-    <header className="h-16 bg-surface border-b border-border-subtle sticky top-0 z-30">
-      <nav className="h-full max-w-7xl mx-auto px-6 flex items-center justify-between">
-        {/* Left side - Logo + Date/Time */}
+    <header className="bg-surface border-b border-border-subtle sticky top-0 z-30">
+      <nav className="max-w-7xl mx-auto px-8 py-6 flex items-center justify-between">
+        {/* Left side - Logo + Date */}
         <div className="flex items-center gap-8">
           {/* Logo */}
           <Link
@@ -64,24 +62,16 @@ export function AppNav() {
             MEREO
           </Link>
 
-          {/* Date and Time Range - only show when session active */}
-          {hasActiveSession && currentSession && (
-            <div className="flex items-center gap-6">
-              {/* Military Date */}
-              <span className="text-sm font-black tracking-wide text-text-primary">
-                {formatMilitaryDate(new Date())}
-              </span>
-
-              {/* Time Range */}
-              <span className="text-sm font-mono font-light text-text-secondary">
-                {formatMilitaryTime(currentSession.startTime)} - {formatMilitaryTime(currentSession.endTime)} HRS
-              </span>
-            </div>
+          {/* Date - casual format, only when session active */}
+          {hasActiveSession && (
+            <span className="text-sm font-medium text-text-secondary">
+              {formatCasualDate(new Date())}
+            </span>
           )}
         </div>
 
         {/* Center - Navigation Links */}
-        <div className="flex items-center gap-2">
+        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-10">
           {visibleLinks.map((link) => {
             const isActive = pathname === link.href;
             return (
@@ -89,28 +79,28 @@ export function AppNav() {
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  "px-5 py-2 text-sm font-medium rounded-lg transition-all duration-200 relative",
+                  "text-xl font-black tracking-tight transition-all duration-200 relative pb-1",
                   isActive
-                    ? "text-accent"
-                    : "text-text-secondary hover:text-accent hover:bg-surface-hover"
+                    ? "text-text-primary"
+                    : "text-text-disabled hover:text-text-secondary"
                 )}
               >
                 {link.label}
-                {/* Active indicator */}
+                {/* Active indicator - underline */}
                 {isActive && (
-                  <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-accent rounded-full" />
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent rounded-full" />
                 )}
               </Link>
             );
           })}
         </div>
 
-        {/* Right side - spacer for balance (session indicator removed) */}
+        {/* Right side - spacer for balance */}
         <div className="flex items-center gap-3 w-[180px] justify-end">
           {!hasActiveSession && (
             <Link
               href="/"
-              className="text-xs text-text-secondary hover:text-accent transition-all duration-200"
+              className="text-sm text-text-secondary hover:text-accent transition-all duration-200"
             >
               Login &rarr;
             </Link>

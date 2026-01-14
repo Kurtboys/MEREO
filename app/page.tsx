@@ -138,7 +138,7 @@ export default function LoginPage() {
           e.currentTarget.style.boxShadow = "0 4px 15px -3px rgba(59, 130, 246, 0.3)";
         }}
       >
-        Login For The Day
+        Punch That Time Card
       </motion.button>
 
       {/* Carryover Indicator */}
@@ -160,10 +160,6 @@ export default function LoginPage() {
         )}
       </AnimatePresence>
 
-      {/* Version indicator - remove after testing */}
-      <div className="fixed bottom-4 right-4 text-xs text-text-disabled/50 font-mono">
-        v0.4.0
-      </div>
     </div>
   );
 }
