@@ -11,10 +11,10 @@ import { getTodayDateString } from "@/lib/utils";
 export default function LoginPage() {
   const router = useRouter();
   const hydrated = useStoreHydration();
-  const { dayStarted, success } = useToast();
+  const { dayStarted } = useToast();
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { missions, currentSession, startDaySession, loadSeedData } = useMereoStore();
+  const { missions, currentSession, startDaySession } = useMereoStore();
 
   // Get yesterday's incomplete/bottleneck missions
   const carryoverMissions = missions.filter(
@@ -63,11 +63,6 @@ export default function LoginPage() {
     [startDaySession, router, dayStarted]
   );
 
-  const handleLoadSeedData = useCallback(() => {
-    loadSeedData();
-    success("Sample data loaded", "3 missions added to your schedule");
-  }, [loadSeedData, success]);
-
   // Show loading state until client hydrates
   if (!currentTime || !hydrated) {
     return (
@@ -95,7 +90,7 @@ export default function LoginPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
-          className="text-text-secondary text-lg md:text-xl mb-16"
+          className="text-text-secondary text-lg md:text-xl mb-8"
         >
           Missions. Not tasks.
         </motion.p>
@@ -105,7 +100,7 @@ export default function LoginPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
-          className="mb-8"
+          className="mb-10"
         >
           <span className="font-mono font-light text-3xl md:text-4xl text-text-secondary">
             {format(currentTime, "h:mm:ss a")}
@@ -120,7 +115,7 @@ export default function LoginPage() {
           whileHover={{ y: -1 }}
           whileTap={{ scale: 0.98 }}
           onClick={handleLoginClick}
-          className="w-full max-w-xs px-8 py-4 bg-accent hover:bg-[#2563EB] text-white font-semibold text-lg rounded-lg transition-all duration-200 shadow-lg shadow-accent/20"
+          className="px-12 py-4 bg-accent hover:bg-[#2563EB] text-white font-black text-xl rounded-lg transition-all duration-200 shadow-lg shadow-accent/20"
         >
           Login for the Day
         </motion.button>
@@ -143,35 +138,6 @@ export default function LoginPage() {
             </motion.div>
           )}
         </AnimatePresence>
-
-        {/* Dev: Load Seed Data Button (for testing) */}
-        {missions.length === 0 && (
-          <motion.button
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4, delay: 1 }}
-            onClick={handleLoadSeedData}
-            className="mt-12 px-4 py-2 text-sm text-text-disabled hover:text-text-secondary transition-colors"
-          >
-            Load sample missions
-          </motion.button>
-        )}
-
-        {/* Footer Links */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.4, delay: 1.2 }}
-          className="fixed bottom-6 flex gap-4 text-sm text-text-disabled"
-        >
-          <a href="/design-system" className="hover:text-text-secondary transition-colors">
-            Design System
-          </a>
-          <span>|</span>
-          <a href="/store-test" className="hover:text-text-secondary transition-colors">
-            Store Test
-          </a>
-        </motion.div>
       </div>
 
       {/* End Time Picker Modal */}
