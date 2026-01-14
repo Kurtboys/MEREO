@@ -138,6 +138,11 @@ export default function LoginPage() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Version indicator - remove after testing */}
+        <div className="fixed bottom-4 right-4 text-xs text-text-disabled/50 font-mono">
+          v0.2.0
+        </div>
       </div>
 
       {/* End Time Picker Modal */}
