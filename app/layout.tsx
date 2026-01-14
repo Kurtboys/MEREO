@@ -16,6 +16,12 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className="antialiased">
         <Providers>{children}</Providers>
+        <span
+          className="fixed bottom-4 right-4 font-mono font-light text-xs"
+          style={{ color: '#525252' }}
+        >
+          v0.3.1
+        </span>
       </body>
     </html>
   );
