@@ -26,7 +26,7 @@ export default function TodayPage() {
   // Loading state
   if (!isClient) {
     return (
-      <div className="h-[calc(100vh-64px)] flex items-center justify-center">
+      <div className="h-[calc(100vh-88px)] flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -35,15 +35,15 @@ export default function TodayPage() {
   // No session state
   if (!currentSession || !currentSession.isActive) {
     return (
-      <div className="h-[calc(100vh-64px)] flex items-center justify-center">
+      <div className="h-[calc(100vh-88px)] flex items-center justify-center">
         <p className="text-text-secondary">Redirecting to login...</p>
       </div>
     );
   }
 
   return (
-    <div className="h-[calc(100vh-80px)] flex">
-      {/* Sidebar - 280px fixed */}
+    <div className="h-[calc(100vh-88px)] flex">
+      {/* Sidebar - 300px fixed */}
       <MissionSidebar />
 
       {/* Main Focus Area */}

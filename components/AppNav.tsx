@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { format } from "date-fns";
 import { useCurrentSession, useStoreHydration } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -17,23 +16,6 @@ const navLinks: NavLink[] = [
   { href: "/whiteboard", label: "Whiteboard", requiresSession: true },
   { href: "/scheduler", label: "Scheduler", requiresSession: false },
 ];
-
-// Format date in casual style: "Jan 14th, 2026"
-function formatCasualDate(date: Date): string {
-  const day = date.getDate();
-  const suffix = getDaySuffix(day);
-  return format(date, "MMM") + " " + day + suffix + ", " + format(date, "yyyy");
-}
-
-function getDaySuffix(day: number): string {
-  if (day >= 11 && day <= 13) return "th";
-  switch (day % 10) {
-    case 1: return "st";
-    case 2: return "nd";
-    case 3: return "rd";
-    default: return "th";
-  }
-}
 
 export function AppNav() {
   const pathname = usePathname();
@@ -51,27 +33,19 @@ export function AppNav() {
 
   return (
     <header className="bg-surface border-b border-border-subtle sticky top-0 z-30">
-      <nav className="max-w-7xl mx-auto px-8 py-6 flex items-center justify-between">
-        {/* Left side - Logo + Date */}
-        <div className="flex items-center gap-8">
-          {/* Logo */}
+      <nav className="max-w-7xl mx-auto px-10 py-8 flex items-center justify-between">
+        {/* Left side - Logo only */}
+        <div className="flex items-center w-[200px]">
           <Link
             href={logoHref}
-            className="text-xl font-black tracking-tight hover:text-accent transition-all duration-200"
+            className="text-2xl font-black tracking-tight hover:text-accent transition-all duration-200"
           >
             MEREO
           </Link>
-
-          {/* Date - casual format, only when session active */}
-          {hasActiveSession && (
-            <span className="text-sm font-medium text-text-secondary">
-              {formatCasualDate(new Date())}
-            </span>
-          )}
         </div>
 
         {/* Center - Navigation Links */}
-        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-10">
+        <div className="flex items-center gap-14">
           {visibleLinks.map((link) => {
             const isActive = pathname === link.href;
             return (
@@ -79,7 +53,7 @@ export function AppNav() {
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  "text-xl font-black tracking-tight transition-all duration-200 relative pb-1",
+                  "text-2xl font-black tracking-tight transition-all duration-200 relative pb-2",
                   isActive
                     ? "text-text-primary"
                     : "text-text-disabled hover:text-text-secondary"
@@ -88,7 +62,7 @@ export function AppNav() {
                 {link.label}
                 {/* Active indicator - underline */}
                 {isActive && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent rounded-full" />
+                  <span className="absolute bottom-0 left-0 right-0 h-[3px] bg-accent rounded-full" />
                 )}
               </Link>
             );
@@ -96,7 +70,7 @@ export function AppNav() {
         </div>
 
         {/* Right side - spacer for balance */}
-        <div className="flex items-center gap-3 w-[180px] justify-end">
+        <div className="flex items-center w-[200px] justify-end">
           {!hasActiveSession && (
             <Link
               href="/"

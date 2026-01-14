@@ -20,7 +20,7 @@ export default function RootLayout({
           className="fixed bottom-4 right-4 font-mono font-light text-xs"
           style={{ color: '#525252' }}
         >
-          v0.4.0
+          v0.5.0
         </span>
       </body>
     </html>
