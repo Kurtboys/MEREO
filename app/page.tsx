@@ -112,10 +112,19 @@ export default function LoginPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
-          whileHover={{ y: -1 }}
+          whileHover={{ y: -1, backgroundColor: "#2563EB" }}
           whileTap={{ scale: 0.98 }}
           onClick={handleLoginClick}
-          className="px-16 py-5 bg-[#3B82F6] hover:bg-[#2563EB] text-white font-black text-2xl rounded-lg transition-all duration-200 shadow-lg shadow-[#3B82F6]/20"
+          style={{
+            padding: "1.25rem 4rem",
+            backgroundColor: "#3B82F6",
+            color: "#FFFFFF",
+            fontWeight: 900,
+            fontSize: "1.5rem",
+            borderRadius: "0.5rem",
+            boxShadow: "0 10px 15px -3px rgba(59, 130, 246, 0.2)",
+            transition: "all 200ms ease",
+          }}
         >
           Login For The Day
         </motion.button>
@@ -141,7 +150,7 @@ export default function LoginPage() {
 
         {/* Version indicator - remove after testing */}
         <div className="fixed bottom-4 right-4 text-xs text-text-disabled/50 font-mono">
-          v0.2.2
+          v0.2.3
         </div>
       </div>
 

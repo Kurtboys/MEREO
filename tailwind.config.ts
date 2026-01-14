@@ -7,15 +7,6 @@ const config: Config = {
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./lib/**/*.{js,ts,jsx,tsx,mdx}",
   ],
-  safelist: [
-    "px-16",
-    "py-5",
-    "text-2xl",
-    "font-black",
-    "bg-[#3B82F6]",
-    "hover:bg-[#2563EB]",
-    "shadow-[#3B82F6]/20",
-  ],
   theme: {
     extend: {
       colors: {
