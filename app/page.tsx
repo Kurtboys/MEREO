@@ -100,7 +100,6 @@ export default function LoginPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
-          className="mb-10"
         >
           <span className="font-mono font-light text-3xl md:text-4xl text-text-secondary">
             {format(currentTime, "h:mm:ss a")}
@@ -112,18 +111,32 @@ export default function LoginPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
-          whileHover={{ y: -1, backgroundColor: "#2563EB" }}
+          whileHover={{
+            y: -2,
+            textShadow: "0 0 20px rgba(59, 130, 246, 0.6)",
+          }}
           whileTap={{ scale: 0.98 }}
           onClick={handleLoginClick}
           style={{
-            padding: "1.25rem 4rem",
-            backgroundColor: "#3B82F6",
+            marginTop: "3rem",
+            padding: "1rem 2rem",
+            backgroundColor: "transparent",
             color: "#FFFFFF",
             fontWeight: 900,
             fontSize: "1.5rem",
-            borderRadius: "0.5rem",
-            boxShadow: "0 10px 15px -3px rgba(59, 130, 246, 0.2)",
+            border: "none",
+            borderBottom: "2px solid #3B82F6",
+            boxShadow: "0 4px 15px -3px rgba(59, 130, 246, 0.3)",
             transition: "all 200ms ease",
+            cursor: "pointer",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderBottomWidth = "3px";
+            e.currentTarget.style.boxShadow = "0 6px 25px -3px rgba(59, 130, 246, 0.5)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderBottomWidth = "2px";
+            e.currentTarget.style.boxShadow = "0 4px 15px -3px rgba(59, 130, 246, 0.3)";
           }}
         >
           Login For The Day
@@ -150,7 +163,7 @@ export default function LoginPage() {
 
         {/* Version indicator - remove after testing */}
         <div className="fixed bottom-4 right-4 text-xs text-text-disabled/50 font-mono">
-          v0.2.3
+          v0.2.4
         </div>
       </div>
 
