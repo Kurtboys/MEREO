@@ -141,7 +141,7 @@ export default function LoginPage() {
 
         {/* Version indicator - remove after testing */}
         <div className="fixed bottom-4 right-4 text-xs text-text-disabled/50 font-mono">
-          v0.2.1
+          v0.2.2
         </div>
       </div>
 
