@@ -52,8 +52,8 @@ export function AppNav() {
   const logoHref = hasActiveSession ? "/today" : "/";
 
   return (
-    <header className="h-16 bg-surface border-b border-border-subtle sticky top-0 z-30">
-      <nav className="h-full max-w-7xl mx-auto px-6 flex items-center justify-between">
+    <header className="bg-surface border-b border-border-subtle sticky top-0 z-30 py-4">
+      <nav className="max-w-7xl mx-auto px-6 flex items-center justify-between">
         {/* Left side - Logo + Date/Time */}
         <div className="flex items-center gap-8">
           {/* Logo */}
@@ -81,7 +81,7 @@ export function AppNav() {
         </div>
 
         {/* Center - Navigation Links */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-6">
           {visibleLinks.map((link) => {
             const isActive = pathname === link.href;
             return (
@@ -89,10 +89,10 @@ export function AppNav() {
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  "px-5 py-2 text-sm font-medium rounded-lg transition-all duration-200 relative",
+                  "px-5 py-2 text-sm font-black uppercase tracking-wide rounded-lg transition-all duration-200 relative",
                   isActive
-                    ? "text-accent"
-                    : "text-text-secondary hover:text-accent hover:bg-surface-hover"
+                    ? "text-text-primary"
+                    : "text-text-secondary hover:text-text-primary hover:bg-surface-hover"
                 )}
               >
                 {link.label}
@@ -110,7 +110,7 @@ export function AppNav() {
           {!hasActiveSession && (
             <Link
               href="/"
-              className="text-xs text-text-secondary hover:text-accent transition-all duration-200"
+              className="text-xs font-medium text-text-secondary hover:text-accent transition-all duration-200"
             >
               Login &rarr;
             </Link>

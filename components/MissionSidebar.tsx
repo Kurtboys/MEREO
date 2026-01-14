@@ -89,26 +89,26 @@ export function MissionSidebar() {
   return (
     <aside className="w-[280px] h-full bg-surface border-r border-border-subtle flex flex-col">
       {/* Header */}
-      <div className="p-5 border-b border-border-subtle">
+      <div className="p-5 border-b border-border-subtle space-y-4">
         {/* Mission Queue Label */}
-        <p className="text-xs font-mono font-light text-text-disabled uppercase tracking-[0.2em] mb-3">
+        <p className="text-xs font-mono font-light text-text-disabled uppercase tracking-[0.2em]">
           MISSION QUEUE
         </p>
 
         {/* Date - Military Format */}
-        <h2 className="text-lg font-black mb-2 tracking-wide">
+        <h2 className="text-lg font-black tracking-wide text-text-primary">
           {formatMilitaryDate(new Date())}
         </h2>
 
         {/* Time range - Military Format */}
-        <p className="text-sm text-text-secondary font-mono font-light mb-4">
+        <p className="text-sm text-text-secondary font-mono font-light">
           {formatMilitaryTime(currentSession.startTime)} - {formatMilitaryTime(currentSession.endTime)} HRS
         </p>
 
         {/* Whiteboard link */}
         <Link
           href="/whiteboard"
-          className="flex items-center gap-2 text-sm text-accent hover:text-accent-hover transition-colors"
+          className="flex items-center gap-2 text-sm font-medium text-accent hover:text-accent-hover transition-colors"
         >
           Open Whiteboard
           <ArrowRight className="w-4 h-4" />
@@ -117,7 +117,7 @@ export function MissionSidebar() {
 
       {/* Reorder lock indicator */}
       {hasStartedMission && (
-        <div className="px-4 py-2 bg-void/50 flex items-center gap-2 text-xs text-text-disabled">
+        <div className="px-4 py-2 bg-void/50 flex items-center gap-2 text-xs font-medium text-text-disabled">
           <Lock className="w-3 h-3" />
           <span>Order locked after first mission</span>
         </div>
@@ -154,7 +154,7 @@ export function MissionSidebar() {
         {/* Bottleneck missions at bottom */}
         {bottleneckMissions.length > 0 && (
           <div className="mt-6 pt-4 border-t border-border-subtle">
-            <p className="text-xs text-text-disabled uppercase tracking-wide mb-3">
+            <p className="text-xs font-mono font-light text-text-disabled uppercase tracking-[0.2em] mb-3">
               Bottlenecked
             </p>
             <div className="space-y-3">
